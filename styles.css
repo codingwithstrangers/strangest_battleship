@@ -4,6 +4,7 @@ body{
     width: 100vh;
     margin: 0;
     padding: 0;
+    background-image: linear-gradient(91deg, #18067b, #5762b6, #1f143b);
 }
 
 *{
@@ -17,7 +18,7 @@ body{
     flex-direction: column;
     width: 176vh;
     height: 100vh;
-    background-image: linear-gradient(91deg, #18067b, #5762b6, #1f143b);
+   
 }
 
 
@@ -500,29 +501,29 @@ body{
 
 @keyframes sunset {
   0% {
-    top: 83%;
+    top: 38%;
     left: 0%;
-    scale: 2;
+    scale: 4;
 }
 25% {
-    top: 23%;
+    top: 18%;
     left: 21%;
-    scale: 3;
+    scale: 5;
 }
 50% {
     top: 7%;
-    left: 47%;
-    scale: 2;
+    left: 49%;
+    scale: 3;
 }
 
 75% {
     top: 17%;
     left: 86%;
-    scale: 1;
+    scale:2;
 }
 100% {
-    top: 85%;
-    left: -1%;
+    top: 33%;
+    left: 99%;
     scale: 1;
 }}
 
@@ -569,4 +570,5 @@ body{
     left: -10%;
     scale: 1;
     rotate: 188deg;
-}}
+}
+}
