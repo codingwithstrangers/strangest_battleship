@@ -1,6 +1,7 @@
-// Create the sun and moon elements and append them to the body
-// const sun = document.getElementById("sun");
+// Battle ship code 
 
+
+// This is the code for the back ground movement 
 
 const sun = document.getElementById("sun");
 
@@ -57,10 +58,10 @@ function updateMoonPosition() {
         moonRotate = elapsedSeconds * 45 / 3600 + 'deg';
     } else if (totalSeconds >= 0 && totalSeconds <= 6 * 3600) {
         const elapsedSeconds = totalSeconds;
-        moonLeft = 13 - (114 / 6) * (elapsedSeconds / 3600);
-        moonTop = 14 - (160 / 6) * (elapsedSeconds / 3600);
+        moonLeft = 80  * (elapsedSeconds / 3600);
+        moonTop = 13 * (elapsedSeconds / 3600);
         moonScale = 3 - (1/ 3) * (elapsedSeconds / 3600);
-        moonRotate = 335 + 'deg';
+        moonRotate = 335 + 'deg' ;
     } else {
         moonLeft = -14;
         moonTop = -18;
@@ -78,20 +79,39 @@ function changeBackground() {
     const currentDate = new Date();
     const hours = currentDate.getHours();
     const minutes = currentDate.getMinutes();
+    const seconds = currentDate.getSeconds();
+    // const hours = currentDate.getSeconds() % 24
+
+    // Calculate total time in seconds
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
     let gradient;
 
+    // Transition background from 6:00 to 17:00
     if (totalSeconds >= 6 * 3600 && totalSeconds < 17 * 3600) {
-       gradient = `linear-gradient(91deg, #48c6f8, #fbfddf, #05b8ff)`;
-    } else if (totalSeconds >= 17 * 3600 && totalSeconds < 18 * 3600) {
+        // Linear interpolation for gradient colors
+        const percent = (totalSeconds - 6 * 3600) / (17 * 3600 - 6 * 3600);
+        gradient = `linear-gradient(91deg, #48c6f8, #fbfddf, #05b8ff)`;
+    }
+    // Start transitioning background from 17:00 to 18:00
+    else if (totalSeconds >= 17 * 3600 && totalSeconds < 18 * 3600) {
+        // Linear interpolation for gradient colors
+        const percent = (totalSeconds - 17 * 3600) / (18 * 3600 - 17 * 3600);
         gradient = `linear-gradient(91deg, #48c6f8, #fbfddf, #05b8ff, #18067b, #5762b6, #1f143b)`;
-    } else {
+    }
+    // From 18:00 onwards, use the second gradient
+    else if (totalSeconds >= 18 * 3600 || totalSeconds < 6 * 3600) {
         gradient = `linear-gradient(91deg, #18067b, #5762b6, #1f143b)`;
     }
 
+    // Update the CSS background image property
     document.body.style.backgroundImage = gradient;
 }
+
+// Call the functions initially
+updateSunPosition();
+updateMoonPosition();
+changeBackground();
 
 // Update positions every second
 setInterval(() => {
