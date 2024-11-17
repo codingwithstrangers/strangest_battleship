@@ -230,28 +230,23 @@ function clearBoard(boardElement) {
     });
 }
 
-// Function to highlight stored ship positions
-function highlightShips(boardElement) {
-    placedShips.forEach(coord => {
-        const square = boardElement.querySelector(`#radar_${coord}`);
-        if (square) square.style.backgroundColor = "blue"; // Highlight ships in blue
-    });
-}
-
 // Function to place the next ship from the array (one ship at a time)
 function placeNextShip(boardSize, boardElement) {
     const shipLength = ships[currentShipIndex]; // Get the current ship length
     const shipCoordinates = placeShip(boardSize, shipLength, boardElement); // Place the ship
 
     placedShips.push(...shipCoordinates); // Store the placed ship coordinates
-    highlightShips(boardElement); // Ensure ships remain highlighted
-
     shipsPlaced++; // Increment the number of ships placed
     currentShipIndex++; // Move to the next ship in the array
+
+    highlightShips(boardElement); // Ensure ships remain highlighted
 
     // If all ships are placed, notify the user
     if (shipsPlaced === 5) {
         alert("All ships have been placed!");
+        checkAndStartGame(placedShips, shipsPlaced);
+        return true
+        
     }
 }
 
@@ -284,7 +279,16 @@ function isValidPlacement(shipCoordinates) {
     );
 }
 
-function undoLastShip() {
+// Function to highlight stored ship positions
+function highlightShips(boardElement) {
+    placedShips.forEach(coord => {
+        const square = boardElement.querySelector(`#radar_${coord}`);
+        if (square) square.style.backgroundColor = "blue"; // Highlight ships in blue
+    });
+}
+
+// Function to undo the last placed ship
+function undoLastShip(boardSize, boardElement) {
     if (shipsPlaced > 0) {
         // Remove the last placed ship coordinates from placedShips
         const shipCoordinates = placedShips.slice(-ships[shipsPlaced - 1]); // Get the last placed ship's coordinates
@@ -300,5 +304,113 @@ function undoLastShip() {
 
         // Decrease the ships placed count
         shipsPlaced--;
+        currentShipIndex--; // Go back to the last placed ship
+    }
+}
+
+// skynet Class
+class Skynet {
+    constructor(boardSize = 8) {
+        this.boardSize = boardSize; // Board dimensions (8x8)
+        this.board = this.initializeBoard(); // Skynet's hidden board
+        this.ships = [5, 4, 3, 2, 2]; // Ship sizes to place
+        this.placedShips = []; // Tracks all placed ship coordinates
+        this.shipsPlaced = 0; // Counter for placed ships
+    }
+
+    // Initialize the board as a 2D array
+    initializeBoard() {
+        return Array.from({ length: this.boardSize }, () =>
+            Array(this.boardSize).fill(0) // 0 indicates empty space
+        );
+    }
+
+    // Function to place all ships on the board
+    placeShips() {
+        for (let shipSize of this.ships) {
+            let placed = false;
+            while (!placed) {
+                const randomOrientation = Math.random() < 0.5 ? "horizontal" : "vertical";
+                const startRow = Math.floor(Math.random() * this.boardSize);
+                const startCol = Math.floor(Math.random() * this.boardSize);
+
+                // Generate ship coordinates
+                const shipCoordinates = this.generateShipCoordinates(startRow, startCol, shipSize, randomOrientation);
+
+                // Validate placement
+                if (this.validatePlacement(shipCoordinates)) {
+                    this.markShipOnBoard(shipCoordinates);
+                    this.placedShips.push(shipCoordinates);
+                    this.shipsPlaced++;
+                    placed = true;
+                    checkAndStartGame(placedShips, shipsPlaced);
+                }
+            }
+        }
+    }
+
+    // Generate coordinates for a ship
+    generateShipCoordinates(startRow, startCol, shipSize, orientation) {
+        const coordinates = [];
+        for (let i = 0; i < shipSize; i++) {
+            const row = orientation === "horizontal" ? startRow : startRow + i;
+            const col = orientation === "horizontal" ? startCol + i : startCol;
+
+            // Push coordinates as [row, col] pairs
+            coordinates.push([row, col]);
+        }
+        return coordinates;
+    }
+
+    // Validate ship placement
+    validatePlacement(coordinates) {
+        return coordinates.every(([row, col]) => 
+            row >= 0 && row < this.boardSize && // Within row bounds
+            col >= 0 && col < this.boardSize && // Within column bounds
+            this.board[row][col] === 0 // Not overlapping another ship
+        );
+    }
+
+    // Mark ship on the board
+    markShipOnBoard(coordinates) {
+        coordinates.forEach(([row, col]) => {
+            this.board[row][col] = 1; // 1 indicates part of a ship
+        });
+    }
+
+    // Debugging tool: Print board to console (optional for testing)
+    printBoard() {
+        console.log(this.board.map(row => row.join(" ")).join("\n"));
+    }
+}
+
+// Example usage
+const skynet = new Skynet();
+skynet.placeShips();
+skynet.printBoard(); // Outputs Skynet's hidden board (for debugging)
+
+
+// game flow
+
+
+
+// Check if both players are ready and prompt first move
+    function checkAndStartGame(placedShips, shipsPlaced) {
+        if (placedShips && shipsPlaced) {
+            // Randomly select the first move
+            const firstPlayer = Math.random() < 0.5 ? "Player 1" : "Skynet";
+            alert(`${firstPlayer} will make the first move.`);
+            return true
+        }
+    }
+
+
+    class GameFlow{ 
+        if (checkAndStartGame = true){
+            
+        }
+        constructor(radarBoard, mainBoard) {
+        this.radarBoard = radarBoard; // Reference to radar board
+        this.mainBoard = mainBoard;   // Reference to the main board
     }
 }
