@@ -124,293 +124,920 @@ setInterval(() => {
 // battle ship code
 // battle ship code
 
-let placedShips = [];
-let lastPlacedShip = null;
-let currentShipIndex = 0;  // Index to track the current ship being placed
-const ships = [5, 4, 3, 2, 2]; // Ship sizes
-let shipsPlaced = 0; // Counter to track how many ships have been placed
+// let placedShips = [];
+// let lastPlacedShip = null;
+// let currentShipIndex = 0;  // Index to track the current ship being placed
+// const ships = [5, 4, 3, 2, 2]; // Ship sizes
+// let shipsPlaced = 0; // Counter to track how many ships have been placed
 
+// document.addEventListener("DOMContentLoaded", () => {
+//     const radarBoard = document.getElementById("radar_board");
+//     const mainBoard = document.getElementById("mainboard");
+//     const npcBoard = document.getElementById("npc_board");
+//     const boardSize = 8;
+//     const columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+//     // Generate the boards
+//     generateBoard(radarBoard, "radar", true);
+//     generateBoard(mainBoard, "main", false);
+//     generateBoard(npcBoard, "npc", false)
+
+//     // New Game button event listener
+//     const newGameButton = document.querySelector(".button");
+//     newGameButton.addEventListener("click", () => {
+//         const isConfirmed = confirm("Are you sure you want to start a new game? This will clear the board.");
+//         if (isConfirmed) {
+//             clearBoard(radarBoard); // Clear the radar board
+//             placedShips = []; // Reset the ship positions
+//             shipsPlaced = 0; // Reset ship placement counter
+//             currentShipIndex = 0; // Reset to start with the first ship
+//         }
+//     });
+
+//     // Random Place button event listener
+//     const randomPlaceButton = document.querySelector(".random");
+//     randomPlaceButton.addEventListener("click", () => {
+//         if (shipsPlaced < 5) {
+//             // Only place the current ship if there are still ships to place
+//             placeNextShip(boardSize, radarBoard);
+//         } else {
+//             alert("All ships have been placed!"); // Alert when all ships are placed
+//         }
+//     });
+
+//     // Undo button event listener
+//     const undoButton = document.querySelector(".undo");
+//     undoButton.addEventListener("click", () => {
+//         if (shipsPlaced > 0) {
+//             undoLastShip(boardSize, radarBoard);
+//         } else {
+//             alert("No ships to undo!"); // Alert if no ships have been placed yet
+//         }
+//     });
+// });
+
+// // Function to generate the board
+// function generateBoard(boardElement, boardClassPrefix, isRadarBoard = false) {
+//     const boardSize = 8;
+//     const columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+//     for (let row = 1; row <= boardSize; row++) {
+//         for (let col = 0; col < boardSize; col++) {
+//             const square = document.createElement("div");
+//             const coordinate = `${columns[col]}${row}`;
+
+//             square.id = `${boardClassPrefix}_${coordinate}`;
+//             square.className = `${boardClassPrefix}_${coordinate}`;
+//             square.textContent = coordinate;
+
+//             square.style.width = "60px";
+//             square.style.height = "60px";
+//             square.style.border = "5px solid #333";
+//             square.style.display = "flex";
+//             square.style.justifyContent = "center";
+//             square.style.alignItems = "center"; 
+//             square.style.backgroundColor = "#ccc";
+//             square.style.cursor = "pointer";
+//             square.style.position = "relative";
+//             square.style.padding = "10px 20px";
+//             square.style.background = "white";
+//             square.style.fontSize = "28px";
+//             square.style.borderTopRightRadius = "10px";
+
+//             if (isRadarBoard) {
+//                 square.addEventListener('mouseover', function() {
+//                     // Only apply hover color if it's not a ship position
+//                     if (!placedShips.includes(coordinate)) {
+//                         square.style.backgroundColor = "#ffd034"; // Hover color
+//                     }
+//                 });
+//                 square.addEventListener('mouseout', function() {
+//                     // Restore the color based on ship presence
+//                     if (placedShips.includes(coordinate)) {
+//                         square.style.backgroundColor = "blue"; // Ship color
+//                     } else {
+//                         square.style.backgroundColor = "#ccc"; // Default color
+//                     }
+//                 });
+//             }
+
+//             boardElement.appendChild(square);
+//         }
+//     }
+// }
+
+// // Function to clear the board
+// function clearBoard(boardElement) {
+//     Array.from(boardElement.children).forEach(square => {
+//         square.style.backgroundColor = "#ccc"; // Reset color to default
+//     });
+// }
+
+// // Function to place the next ship from the array (one ship at a time)
+// function placeNextShip(boardSize, boardElement) {
+//     const shipLength = ships[currentShipIndex]; // Get the current ship length
+//     const shipCoordinates = placeShip(boardSize, shipLength, boardElement); // Place the ship
+
+//     placedShips.push(...shipCoordinates); // Store the placed ship coordinates
+//     shipsPlaced++; // Increment the number of ships placed
+//     currentShipIndex++; // Move to the next ship in the array
+
+//     highlightShips(boardElement); // Ensure ships remain highlighted
+
+//     // If all ships are placed, notify the user
+//     if (shipsPlaced === 5) {
+//         alert("All ships have been placed!");
+//         checkAndStartGame(placedShips, shipsPlaced);
+//         return true
+        
+//     }
+// }
+
+// // Function to place a ship (random placement logic for simplicity)
+// function placeShip(boardSize, shipLength, boardElement) {
+//     const columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+//     while (true) {
+//         const randomOrientation = Math.random() < 0.5 ? "horizontal" : "vertical";
+//         const startRow = Math.floor(Math.random() * (randomOrientation === "horizontal" ? boardSize : boardSize - shipLength + 1)) + 1;
+//         const startCol = Math.floor(Math.random() * (randomOrientation === "horizontal" ? boardSize - shipLength + 1 : boardSize));
+
+//         const shipCoordinates = Array.from({ length: shipLength }, (_, i) =>
+//             `${columns[startCol + (randomOrientation === "horizontal" ? i : 0)]}${startRow + (randomOrientation === "vertical" ? i : 0)}`
+//         );
+
+//         if (isValidPlacement(shipCoordinates)) {
+//             shipCoordinates.forEach((coord) => {
+//                 const square = document.getElementById(`radar_${coord}`);
+//                 if (square) square.style.backgroundColor = "blue"; // Mark ship coordinates
+//             });
+//             return shipCoordinates; // Return the placed coordinates
+//         }
+//     }
+// }
+
+// // Helper function to validate ship placement
+// function isValidPlacement(shipCoordinates) {
+//     return shipCoordinates.every(
+//         (coord) => !placedShips.includes(coord) && document.getElementById(`radar_${coord}`)
+//     );
+// }
+
+// // Function to highlight stored ship positions
+// function highlightShips(boardElement) {
+//     placedShips.forEach(coord => {
+//         const square = boardElement.querySelector(`#radar_${coord}`);
+//         if (square) square.style.backgroundColor = "blue"; // Highlight ships in blue
+//     });
+// }
+
+// // Function to undo the last placed ship
+// function undoLastShip(boardSize, boardElement) {
+//     if (shipsPlaced > 0) {
+//         // Remove the last placed ship coordinates from placedShips
+//         const shipCoordinates = placedShips.slice(-ships[shipsPlaced - 1]); // Get the last placed ship's coordinates
+//         placedShips = placedShips.slice(0, -ships[shipsPlaced - 1]); // Remove last ship from placedShips array
+
+//         // Update the board to remove the ship (reset its color)
+//         shipCoordinates.forEach(coord => {
+//             const square = document.getElementById(`radar_${coord}`);
+//             if (square) {
+//                 square.style.backgroundColor = "#ccc"; // Reset to default color
+//             }
+//         });
+
+//         // Decrease the ships placed count
+//         shipsPlaced--;
+//         currentShipIndex--; // Go back to the last placed ship
+//     }
+// }
+
+// // skynet Class
+// class Skynet {
+//     constructor(boardSize = 8) {
+//         this.boardSize = boardSize; // Board dimensions (8x8)
+//         this.board = this.initializeBoard(); // Skynet's hidden board
+//         this.ships = [5, 4, 3, 2, 2]; // Ship sizes to place
+//         this.placedShips = []; // Tracks all placed ship coordinates
+//         this.shipsPlaced = 0; // Counter for placed ships
+//     }
+
+//     // Initialize the board as a 2D array
+//     initializeBoard() {
+//         return Array.from({ length: this.boardSize }, () =>
+//             Array(this.boardSize).fill(0) // 0 indicates empty space
+//         );
+//     }
+
+//     // Function to place all ships on the board
+//     placeShips() {
+//         for (let shipSize of this.ships) {
+//             let placed = false;
+//             while (!placed) {
+//                 const randomOrientation = Math.random() < 0.5 ? "horizontal" : "vertical";
+//                 const startRow = Math.floor(Math.random() * this.boardSize);
+//                 const startCol = Math.floor(Math.random() * this.boardSize);
+
+//                 // Generate ship coordinates
+//                 const shipCoordinates = this.generateShipCoordinates(startRow, startCol, shipSize, randomOrientation);
+
+//                 // Validate placement
+//                 if (this.validatePlacement(shipCoordinates)) {
+//                     this.markShipOnBoard(shipCoordinates);
+//                     this.placedShips.push(shipCoordinates);
+//                     this.shipsPlaced++;
+//                     placed = true;
+//                     checkAndStartGame(placedShips, shipsPlaced);
+//                 }
+//             }
+//         }
+//     }
+
+//     // Generate coordinates for a ship
+//     generateShipCoordinates(startRow, startCol, shipSize, orientation) {
+//         const coordinates = [];
+//         for (let i = 0; i < shipSize; i++) {
+//             const row = orientation === "horizontal" ? startRow : startRow + i;
+//             const col = orientation === "horizontal" ? startCol + i : startCol;
+
+//             // Push coordinates as [row, col] pairs
+//             coordinates.push([row, col]);
+//         }
+//         return coordinates;
+//     }
+
+//     // Validate ship placement
+//     validatePlacement(coordinates) {
+//         return coordinates.every(([row, col]) => 
+//             row >= 0 && row < this.boardSize && // Within row bounds
+//             col >= 0 && col < this.boardSize && // Within column bounds
+//             this.board[row][col] === 0 // Not overlapping another ship
+//         );
+//     }
+
+//     // Mark ship on the board
+//     markShipOnBoard(coordinates) {
+//         coordinates.forEach(([row, col]) => {
+//             this.board[row][col] = 1; // 1 indicates part of a ship
+//         });
+//     }
+
+//     // Debugging tool: Print board to console (optional for testing)
+//     printBoard() {
+//         console.log(this.board.map(row => row.join(" ")).join("\n"));
+//     }
+// }
+
+// // Example usage
+// const skynet = new Skynet();
+// skynet.placeShips();
+// skynet.printBoard(); // Outputs Skynet's hidden board (for debugging)
+
+
+// // game flow
+
+
+
+// // Check if both players are ready and prompt first move
+//     function checkAndStartGame(placedShips, shipsPlaced) {
+//         if (placedShips && shipsPlaced) {
+//             // Randomly select the first move
+//             const firstPlayer = Math.random() < 0.5 ? "Player 1" : "Skynet";
+//             alert(`${firstPlayer} will make the first move.`);
+//             return true
+//         }
+//     }
+
+
+
+
+// Refactor 
+
+
+// making the board
+// document.addEventListener("DOMContentLoaded", () => {
+//     const radarBoard = document.getElementById("radar_board");
+//     const mainBoard = document.getElementById("main_board");
+//     const npcBoard = document.getElementById("npc_board");
+
+//     // Create instances of the Board class for each of the 3 boards
+//     const radar = new Board(radarBoard, "radar");
+//     const main = new Board(mainBoard, "main");
+//     const npc = new Board(npcBoard, "npc");
+// });
+
+// class Board {
+//     constructor(boardElement, boardClassPrefix) {
+//         this.boardElement = boardElement;
+//         this.boardClassPrefix = boardClassPrefix;
+//         this.boardSize = 8;
+//         this.columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+//         this.generateBoard();
+//     }
+
+//     // Method to generate the board and append it to the DOM
+//     generateBoard() {
+//         for (let row = 1; row <= this.boardSize; row++) {
+//             for (let col = 0; col < this.boardSize; col++) {
+//                 const square = document.createElement("div");
+//                 const coordinate = `${this.columns[col]}${row}`;
+
+//                 square.id = `${this.boardClassPrefix}_${coordinate}`;
+//                 square.className = `${this.boardClassPrefix}_${coordinate}`;
+//                 square.textContent = coordinate;
+
+//                 square.style.width = "60px";
+//                 square.style.height = "60px";
+//                 square.style.border = "5px solid #333";
+//                 square.style.display = "flex";
+//                 square.style.justifyContent = "center";
+//                 square.style.alignItems = "center"; 
+//                 square.style.backgroundColor = "#ccc";
+//                 square.style.cursor = "pointer";
+//                 square.style.position = "relative";
+//                 square.style.padding = "10px 20px";
+//                 square.style.background = "white";
+//                 square.style.fontSize = "28px";
+//                 square.style.borderTopRightRadius = "10px";
+
+//                 this.boardElement.appendChild(square);
+//             }
+//         }
+//     }
+// }
+
+// player 1 handling 
+
+// class Player {
+//     constructor(radarBoard, mainBoard, npcBoard) {
+//         this.radarBoard = radarBoard;
+//         this.mainBoard = mainBoard;
+//         this.ships = [5, 4, 3, 2, 2]; // Ship sizes
+//         this.shipCount = 0;
+//         this.placedShips = []; // Tracks coordinates of all placed ships
+//         this.shipPlacementHistory = []; // Tracks placement details for undo
+//         this.shipPlacementInProgress = false;
+//         this.playerAttempts = {};    // Tracks player attempts and their results
+//         this.skynetShipLocations = npcBoard; // Locations of Skynet's ships
+//     }
+
+  
+
+//     // Randomly place a ship
+//     placeShip() {
+//         if (this.shipCount >= this.ships.length) {
+//             alert("All ships are placed");
+//             return;
+//         }
+
+//         this.shipPlacementInProgress = true;
+//         const shipSize = this.ships[this.shipCount];
+//         let placed = false;
+
+//         // Attempt to randomly place the ship
+//         while (!placed) {
+//             const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+//             const startX = Math.floor(Math.random() * 8); // Row (0-7)
+//             const startY = Math.floor(Math.random() * 8); // Column (0-7)
+
+//             if (this.isValidPlacement(startX, startY, shipSize, direction)) {
+//                 placed = this.placeShipOnBoard(startX, startY, shipSize, direction);
+//                 this.shipPlacementHistory.push({ startX, startY, shipSize, direction });
+//                 this.shipCount++;
+//             }
+//         }
+
+//         this.shipPlacementInProgress = false;
+//     }
+
+    
+//     // Attempt to place the ship at a specific coordinate and direction
+//     tryPlaceShip(startCoordinate, shipSize) {
+//         const direction = prompt("Enter direction (horizontal or vertical):").toLowerCase();
+//         if (!["horizontal", "vertical"].includes(direction)) {
+//             alert("Invalid direction. Use 'horizontal' or 'vertical'.");
+//             return false;
+//         }
+
+//         const startX = parseInt(startCoordinate.slice(1)) - 1; // Row number
+//         const startY = startCoordinate.charCodeAt(0) - 65; // Column number
+
+//         if (!this.isValidPlacement(startX, startY, shipSize, direction)) {
+//             return false;
+//         }
+
+//         this.placeShipOnBoard(startX, startY, shipSize, direction);
+//         return { startX, startY, direction };
+//     }
+
+//     // Check if a ship can be placed at a location without overlapping
+//     isValidPlacement(startX, startY, shipSize, direction) {
+//         if (direction === 'horizontal') {
+//             if (startY + shipSize > 8) return false;
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coord = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+//                 if (this.placedShips.includes(coord)) {
+//                     return false;
+//                 }
+//             }
+//         } else {
+//             if (startX + shipSize > 8) return false;
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coord = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+//                 if (this.placedShips.includes(coord)) {
+//                     return false;
+//                 }
+//             }
+//         }
+//         return true;
+//     }
+
+//     // Place a ship on the board
+//     placeShipOnBoard(startX, startY, shipSize, direction) {
+//         if (direction === 'horizontal') {
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coord = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+//                 this.placedShips.push(coord);
+//                 this.highlightShipOnBoard(coord);
+//             }
+//         } else {
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coord = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+//                 this.placedShips.push(coord);
+//                 this.highlightShipOnBoard(coord);
+//             }
+//         }
+//         return true;
+//     }
+
+//     // Highlight the ship on both radar and main boards
+//     highlightShipOnBoard(coordinate) {
+//         const radarSquare = document.getElementById(`radar_${coordinate}`);
+//         const mainSquare = document.getElementById(`main_${coordinate}`);
+
+//         if (radarSquare && mainSquare) {
+//             radarSquare.style.backgroundColor = 'blue';
+//             mainSquare.style.backgroundColor = 'blue';
+//         }
+//     }
+
+//     // Undo the last ship placement
+//     undoLastShip() {
+//         if (this.shipPlacementHistory.length > 0) {
+//             const lastShip = this.shipPlacementHistory.pop();
+//             this.removeShipFromBoard(lastShip);
+//             this.shipCount--;
+//         } else {
+//             alert("No ships to undo!");
+//         }
+//     }
+
+//     // Remove a ship from the board
+//     removeShipFromBoard(ship) {
+//         const { startX, startY, shipSize, direction } = ship;
+
+//         if (direction === 'horizontal') {
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coord = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+//                 this.placedShips = this.placedShips.filter(c => c !== coord);
+//                 this.resetBoardSquare(coord);
+//             }
+//         } else {
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coord = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+//                 this.placedShips = this.placedShips.filter(c => c !== coord);
+//                 this.resetBoardSquare(coord);
+//             }
+//         }
+//     }
+
+//     // Reset the visual appearance of a board square
+//     resetBoardSquare(coordinate) {
+//         const radarSquare = document.getElementById(`radar_${coordinate}`);
+//         const mainSquare = document.getElementById(`main_${coordinate}`);
+
+//         if (radarSquare && mainSquare) {
+//             radarSquare.style.backgroundColor = '#ccc'; // Default color
+//             mainSquare.style.backgroundColor = '#ccc'; // Default color
+//         }
+//     }  
+  
+        
+//     // Method to handle player selection (clicking on radar board)
+//     handlePlayerSelection(coordinate) {
+//         // Implement logic to handle what happens when the player selects a square
+//         console.log(`Player selected coordinate: ${coordinate}`);
+        
+//         // Example: You can update the radar board visually to show a hit or miss.
+//         const selectedSquare = document.getElementById(`radar_${coordinate}`);
+//         if (selectedSquare) {
+//             selectedSquare.style.backgroundColor = "pink"; // This is just an example to mark the square as selected
+//         }
+//     }
+
+// }
+
+
+// // Main Game Setup
+// document.addEventListener("DOMContentLoaded", () => {
+//     const radarBoard = document.getElementById("radar_board");
+//     const mainBoard = document.getElementById("main_board");
+//     const randomPlaceButton = document.querySelector(".random");
+//     const undoButton = document.querySelector(".undo");
+  
+//     const player1 = new Player(radarBoard, mainBoard);
+  
+//     // Button click handler to place ships one at a time
+//     randomPlaceButton.addEventListener('click', () => {
+//         player1.placeShip();
+//     });
+  
+//     // Button click handler to undo last ship placement
+//     undoButton.addEventListener('click', () => {
+//         player1.undoLastShip();
+//     });
+  
+//     // Click handler to register player selections
+//     radarBoard.addEventListener('dblclick', (event) => {
+//         // Check if the clicked element is a square (with 'radar_' prefix in id)
+//         if (event.target && event.target.id && event.target.id.startsWith('radar_')) {
+//             const coordinate = event.target.id.replace("radar_", ""); // Get the coordinate from the clicked square's ID
+//             player1.handlePlayerSelection(coordinate); // Handle the selection
+//         }
+//     });
+// });
+
+
+// // npcboard
+// class NpcBoard {
+//     constructor(boardElement) {
+//         this.boardElement = boardElement;
+//         this.boardSize = 8;
+//         this.columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+//         this.boardState = {};  // Track the state (hit/miss) of each square
+//         this.generateBoard();
+//     }
+
+//     // Method to generate the board and append it to the DOM
+//     generateBoard() {
+//         for (let row = 1; row <= this.boardSize; row++) {
+//             for (let col = 0; col < this.boardSize; col++) {
+//                 const square = document.createElement("div");
+//                 const coordinate = `${this.columns[col]}${row}`;
+
+//                 square.id = `npc_${coordinate}`;
+//                 square.className = `npc_${coordinate}`;
+//                 square.textContent = coordinate;
+
+//                 square.style.width = "60px";
+//                 square.style.height = "60px";
+//                 square.style.border = "5px solid #333";
+//                 square.style.display = "flex";
+//                 square.style.justifyContent = "center";
+//                 square.style.alignItems = "center";
+//                 square.style.backgroundColor = "#ccc";
+//                 square.style.cursor = "pointer";
+//                 square.style.position = "relative";
+//                 square.style.padding = "10px 20px";
+//                 square.style.background = "white";
+//                 square.style.fontSize = "28px";
+//                 square.style.borderTopRightRadius = "10px";
+
+//                 // Add the square to the board
+//                 this.boardElement.appendChild(square);
+
+//                 // Initialize the board state for each square
+//                 this.boardState[coordinate] = 'empty';  // 'empty', 'hit', 'miss'
+//             }
+//         }
+//     }
+
+//     // Method to update the square color based on hit or miss
+//     updateSquare(coordinate, result) {
+//         const square = document.getElementById(`npc_${coordinate}`);
+//         if (square) {
+//             if (result === 'hit') {
+//                 square.style.backgroundColor = 'green'; // Hit on NPC ship
+//             } else if (result === 'miss') {
+//                 square.style.backgroundColor = 'red'; // Missed shot
+//             }
+//             // Update the board state
+//             this.boardState[coordinate] = result;
+//         }
+//     }
+
+//     // Method to check if a square is already hit or missed
+//     isSquareHit(coordinate) {
+//         return this.boardState[coordinate] === 'hit';
+//     }
+
+//     // Method to reset the board (useful for starting a new game)
+//     resetBoard() {
+//         // Reset all squares to their initial state
+//         for (const coordinate in this.boardState) {
+//             this.boardState[coordinate] = 'empty';
+//             const square = document.getElementById(`npc_${coordinate}`);
+//             if (square) {
+//                 square.style.backgroundColor = '#ccc'; // Reset to default color
+//             }
+//         }
+//     }
+// }
+
+// // Example of how to initialize and use the NpcBoard
+// document.addEventListener("DOMContentLoaded", () => {
+//     const npcBoardElement = document.getElementById("npc_board");
+//     const npcBoard = new NpcBoard(npcBoardElement);
+// });
+
+
+// // skynet code
+
+// class Skynet {
+//     constructor(boardElement) {
+//         this.boardElement = boardElement;
+//         this.ships = [5, 4, 3, 2, 2];  // Ship sizes
+//         this.shipCount = 0;  // Number of placed ships
+//         this.placedShips = []; // Array to track placed ships
+//         this.boardState = {}; // Object to track state of the board
+//         // this.generateBoard(); // Generate the board
+//     }
+
+//     // Method to generate the board (like the NPC board, but we won't show ships here)
+//     generateBoard() {
+//         for (let row = 1; row <= 8; row++) {
+//             for (let col = 0; col < 8; col++) {
+//                 const square = document.createElement("div");
+//                 const coordinate = `${String.fromCharCode(65 + col)}${row}`;
+
+//                 square.id = `npc_${coordinate}`;
+//                 square.className = `npc_${coordinate}`;
+//                 square.style.width = "60px";
+//                 square.style.height = "60px";
+//                 square.style.border = "5px solid #333";
+//                 square.style.display = "flex";
+//                 square.style.justifyContent = "center";
+//                 square.style.alignItems = "center";
+//                 square.style.backgroundColor = "#ccc"; // Default color for empty squares
+//                 square.style.position = "relative";
+//                 square.style.padding = "10px 20px";
+//                 square.style.fontSize = "28px";
+//                 square.style.borderTopRightRadius = "10px";
+
+//                 // Add the square to the board
+//                 this.boardElement.appendChild(square);
+
+//                 // Initialize the board state for each square
+//                 this.boardState[coordinate] = 'empty';  // 'empty', 'hit', 'miss'
+//             }
+//         }
+//     }
+
+//     // Function to place all ships randomly on the board
+//     placeShips() {
+//         while (this.shipCount < 5) {
+//             const shipSize = this.ships[this.shipCount];
+//             let placed = false;
+
+//             // Try placing the ship until it's successfully placed
+//             while (!placed) {
+//                 const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+//                 const startX = Math.floor(Math.random() * 8); // Random starting x
+//                 const startY = Math.floor(Math.random() * 8); // Random starting y
+
+//                 // Check if placement is valid
+//                 if (this.isValidPlacement(startX, startY, shipSize, direction)) {
+//                     placed = this.placeShip(startX, startY, shipSize, direction);
+//                     this.shipCount++;
+//                 }
+//             }
+//         }
+//     }
+
+//     // Check if the ship can be placed without overlapping
+//     isValidPlacement(startX, startY, shipSize, direction) {
+//         if (direction === 'horizontal') {
+//             if (startY + shipSize > 8) return false; // Ship extends past the right edge
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coordinate = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+//                 if (this.boardState[coordinate] === 'occupied') {
+//                     return false; // Overlap with an existing ship
+//                 }
+//             }
+//         } else {
+//             if (startX + shipSize > 8) return false; // Ship extends past the bottom edge
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coordinate = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+//                 if (this.boardState[coordinate] === 'occupied') {
+//                     return false; // Overlap with an existing ship
+//                 }
+//             }
+//         }
+//         return true;
+//     }
+
+//     // Function to place the ship on the board
+//     placeShip(startX, startY, shipSize, direction) {
+//         if (direction === 'horizontal') {
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coordinate = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+//                 this.boardState[coordinate] = 'occupied'; // Mark the square as occupied
+//                 this.placedShips.push(coordinate); // Track the placed ship
+//                 this.highlightShip(coordinate); // Optional: Visual highlight
+//             }
+//         } else {
+//             for (let i = 0; i < shipSize; i++) {
+//                 const coordinate = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+//                 this.boardState[coordinate] = 'occupied'; // Mark the square as occupied
+//                 this.placedShips.push(coordinate); // Track the placed ship
+//                 this.highlightShip(coordinate); // Optional: Visual highlight
+//             }
+//         }
+//         return true;
+//     }
+
+//     // Highlight the placed ship on the board (visual purposes only)
+//     highlightShip(coordinate) {
+//         const square = document.getElementById(`npc_${coordinate}`);
+//         if (square) {
+//             square.style.backgroundColor = 'skyblue'; // Mark ship locations (blue for now)
+//         }
+//     }
+// }
+
+// // Example of how to use the Skynet class
+// document.addEventListener("DOMContentLoaded", () => {
+//     const npcBoardElement = document.getElementById("npc_board");
+//     const skynet = new Skynet(npcBoardElement);
+//     skynet.placeShips(); // Place all ships randomly on the board
+// });
+
+
+// // game flow
+
+// refactor 2
+
+// making the board
 document.addEventListener("DOMContentLoaded", () => {
-    const radarBoard = document.getElementById("radar_board");
-    const mainBoard = document.getElementById("board");
-    const boardSize = 8;
-    const columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    // const radarBoard = document.getElementById("radar_board");
+    const mainBoard = document.getElementById("main_board");
+    // const npcBoard = document.getElementById("npc_board");
 
-    // Generate the boards
-    generateBoard(radarBoard, "radar", true);
-    generateBoard(mainBoard, "main", false);
-
-    // New Game button event listener
-    const newGameButton = document.querySelector(".button");
-    newGameButton.addEventListener("click", () => {
-        const isConfirmed = confirm("Are you sure you want to start a new game? This will clear the board.");
-        if (isConfirmed) {
-            clearBoard(radarBoard); // Clear the radar board
-            placedShips = []; // Reset the ship positions
-            shipsPlaced = 0; // Reset ship placement counter
-            currentShipIndex = 0; // Reset to start with the first ship
-        }
-    });
-
-    // Random Place button event listener
-    const randomPlaceButton = document.querySelector(".random");
-    randomPlaceButton.addEventListener("click", () => {
-        if (shipsPlaced < 5) {
-            // Only place the current ship if there are still ships to place
-            placeNextShip(boardSize, radarBoard);
-        } else {
-            alert("All ships have been placed!"); // Alert when all ships are placed
-        }
-    });
-
-    // Undo button event listener
-    const undoButton = document.querySelector(".undo");
-    undoButton.addEventListener("click", () => {
-        if (shipsPlaced > 0) {
-            undoLastShip(boardSize, radarBoard);
-        } else {
-            alert("No ships to undo!"); // Alert if no ships have been placed yet
-        }
-    });
+    // Create instances of the Board class for each of the 3 boards
+    // const radar = new Board(radarBoard, "radar");
+    const main = new Board(mainBoard, "main");
+    // const npc = new Board(npcBoard, "npc");
+    
+    
 });
 
-// Function to generate the board
-function generateBoard(boardElement, boardClassPrefix, isRadarBoard = false) {
-    const boardSize = 8;
-    const columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    for (let row = 1; row <= boardSize; row++) {
-        for (let col = 0; col < boardSize; col++) {
-            const square = document.createElement("div");
-            const coordinate = `${columns[col]}${row}`;
+class Board {
+    constructor(boardElement, boardClassPrefix) {
+        this.boardElement = boardElement;
+        this.boardClassPrefix = boardClassPrefix;
+        this.boardSize = 8;
+        this.columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+        this.boardState = {};  // Store board state (ship positions, hits/misses)
+        this.generateBoard();
+    }
 
-            square.id = `${boardClassPrefix}_${coordinate}`;
-            square.className = `${boardClassPrefix}_${coordinate}`;
-            square.textContent = coordinate;
-
-            square.style.width = "60px";
-            square.style.height = "60px";
-            square.style.border = "5px solid #333";
-            square.style.display = "flex";
-            square.style.justifyContent = "center";
-            square.style.alignItems = "center"; 
-            square.style.backgroundColor = "#ccc";
-            square.style.cursor = "pointer";
-            square.style.position = "relative";
-            square.style.padding = "10px 20px";
-            square.style.background = "white";
-            square.style.fontSize = "28px";
-            square.style.borderTopRightRadius = "10px";
-
-            if (isRadarBoard) {
-                square.addEventListener('mouseover', function() {
-                    // Only apply hover color if it's not a ship position
-                    if (!placedShips.includes(coordinate)) {
-                        square.style.backgroundColor = "#ffd034"; // Hover color
-                    }
-                });
-                square.addEventListener('mouseout', function() {
-                    // Restore the color based on ship presence
-                    if (placedShips.includes(coordinate)) {
-                        square.style.backgroundColor = "blue"; // Ship color
-                    } else {
-                        square.style.backgroundColor = "#ccc"; // Default color
-                    }
-                });
+    generateBoard() {
+        for (let row = 1; row <= this.boardSize; row++) {
+            for (let col = 0; col < this.boardSize; col++) {
+                const square = document.createElement("div");
+                const coordinate = `${this.columns[col]}${row}`;
+                square.id = `${this.boardClassPrefix}_${coordinate}`;
+                square.className = `${this.boardClassPrefix}_${coordinate}`;
+                square.textContent = coordinate;
+                square.style.width = "60px";
+                square.style.height = "60px";
+                square.style.border = "5px solid #333";
+                square.style.display = "flex";
+                square.style.justifyContent = "center";
+                square.style.alignItems = "center"; 
+                square.style.backgroundColor = "#ccc";
+                square.style.cursor = "pointer";
+                square.style.position = "relative";
+                square.style.fontSize = "28px";
+                this.boardElement.appendChild(square);
             }
-
-            boardElement.appendChild(square);
         }
     }
 }
 
-// Function to clear the board
-function clearBoard(boardElement) {
-    Array.from(boardElement.children).forEach(square => {
-        square.style.backgroundColor = "#ccc"; // Reset color to default
-    });
-}
-
-// Function to place the next ship from the array (one ship at a time)
-function placeNextShip(boardSize, boardElement) {
-    const shipLength = ships[currentShipIndex]; // Get the current ship length
-    const shipCoordinates = placeShip(boardSize, shipLength, boardElement); // Place the ship
-
-    placedShips.push(...shipCoordinates); // Store the placed ship coordinates
-    shipsPlaced++; // Increment the number of ships placed
-    currentShipIndex++; // Move to the next ship in the array
-
-    highlightShips(boardElement); // Ensure ships remain highlighted
-
-    // If all ships are placed, notify the user
-    if (shipsPlaced === 5) {
-        alert("All ships have been placed!");
-        checkAndStartGame(placedShips, shipsPlaced);
-        return true
-        
-    }
-}
-
-// Function to place a ship (random placement logic for simplicity)
-function placeShip(boardSize, shipLength, boardElement) {
-    const columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    while (true) {
-        const randomOrientation = Math.random() < 0.5 ? "horizontal" : "vertical";
-        const startRow = Math.floor(Math.random() * (randomOrientation === "horizontal" ? boardSize : boardSize - shipLength + 1)) + 1;
-        const startCol = Math.floor(Math.random() * (randomOrientation === "horizontal" ? boardSize - shipLength + 1 : boardSize));
-
-        const shipCoordinates = Array.from({ length: shipLength }, (_, i) =>
-            `${columns[startCol + (randomOrientation === "horizontal" ? i : 0)]}${startRow + (randomOrientation === "vertical" ? i : 0)}`
-        );
-
-        if (isValidPlacement(shipCoordinates)) {
-            shipCoordinates.forEach((coord) => {
-                const square = document.getElementById(`radar_${coord}`);
-                if (square) square.style.backgroundColor = "blue"; // Mark ship coordinates
-            });
-            return shipCoordinates; // Return the placed coordinates
-        }
-    }
-}
-
-// Helper function to validate ship placement
-function isValidPlacement(shipCoordinates) {
-    return shipCoordinates.every(
-        (coord) => !placedShips.includes(coord) && document.getElementById(`radar_${coord}`)
-    );
-}
-
-// Function to highlight stored ship positions
-function highlightShips(boardElement) {
-    placedShips.forEach(coord => {
-        const square = boardElement.querySelector(`#radar_${coord}`);
-        if (square) square.style.backgroundColor = "blue"; // Highlight ships in blue
-    });
-}
-
-// Function to undo the last placed ship
-function undoLastShip(boardSize, boardElement) {
-    if (shipsPlaced > 0) {
-        // Remove the last placed ship coordinates from placedShips
-        const shipCoordinates = placedShips.slice(-ships[shipsPlaced - 1]); // Get the last placed ship's coordinates
-        placedShips = placedShips.slice(0, -ships[shipsPlaced - 1]); // Remove last ship from placedShips array
-
-        // Update the board to remove the ship (reset its color)
-        shipCoordinates.forEach(coord => {
-            const square = document.getElementById(`radar_${coord}`);
-            if (square) {
-                square.style.backgroundColor = "#ccc"; // Reset to default color
-            }
-        });
-
-        // Decrease the ships placed count
-        shipsPlaced--;
-        currentShipIndex--; // Go back to the last placed ship
-    }
-}
-
-// skynet Class
-class Skynet {
-    constructor(boardSize = 8) {
-        this.boardSize = boardSize; // Board dimensions (8x8)
-        this.board = this.initializeBoard(); // Skynet's hidden board
-        this.ships = [5, 4, 3, 2, 2]; // Ship sizes to place
-        this.placedShips = []; // Tracks all placed ship coordinates
-        this.shipsPlaced = 0; // Counter for placed ships
+class NpcBoard extends Board {
+    constructor(boardElement) {
+        super(boardElement, "npc");
+        this.ships = [5, 4, 3, 2, 2]; // Ship sizes: 5-spot, 4-spot, 3-spot, 2-spot, 2-spot
+        this.placedShips = []; // Track placed ship coordinates
+        this.shipCount = 0; // Count of ships placed
+        this.boardState = {}; // Store board state (occupied or empty)
     }
 
-    // Initialize the board as a 2D array
-    initializeBoard() {
-        return Array.from({ length: this.boardSize }, () =>
-            Array(this.boardSize).fill(0) // 0 indicates empty space
-        );
-    }
-
-    // Function to place all ships on the board
-    placeShips() {
-        for (let shipSize of this.ships) {
+    // Function to place all ships randomly on the board
+    placeShipsRandomly() {
+        while (this.shipCount < 5) {
+            const shipSize = this.ships[this.shipCount];
             let placed = false;
+
+            // Try placing the ship until it's successfully placed
             while (!placed) {
-                const randomOrientation = Math.random() < 0.5 ? "horizontal" : "vertical";
-                const startRow = Math.floor(Math.random() * this.boardSize);
-                const startCol = Math.floor(Math.random() * this.boardSize);
+                const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+                const startX = Math.floor(Math.random() * 8); // Random starting x
+                const startY = Math.floor(Math.random() * 8); // Random starting y
 
-                // Generate ship coordinates
-                const shipCoordinates = this.generateShipCoordinates(startRow, startCol, shipSize, randomOrientation);
-
-                // Validate placement
-                if (this.validatePlacement(shipCoordinates)) {
-                    this.markShipOnBoard(shipCoordinates);
-                    this.placedShips.push(shipCoordinates);
-                    this.shipsPlaced++;
-                    placed = true;
-                    checkAndStartGame(placedShips, shipsPlaced);
+                // Check if placement is valid
+                if (this.isValidPlacement(startX, startY, shipSize, direction)) {
+                    placed = this.placeShip(startX, startY, shipSize, direction);
+                    this.shipCount++;
                 }
             }
         }
+
+        // Log the ship locations after placing them
+        console.log("NPC Board Ship Locations:", this.placedShips);
     }
 
-    // Generate coordinates for a ship
-    generateShipCoordinates(startRow, startCol, shipSize, orientation) {
-        const coordinates = [];
-        for (let i = 0; i < shipSize; i++) {
-            const row = orientation === "horizontal" ? startRow : startRow + i;
-            const col = orientation === "horizontal" ? startCol + i : startCol;
-
-            // Push coordinates as [row, col] pairs
-            coordinates.push([row, col]);
+    // Check if the ship can be placed without overlapping
+    isValidPlacement(startX, startY, shipSize, direction) {
+        if (direction === 'horizontal') {
+            if (startY + shipSize > 8) return false; // Ship extends past the right edge
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY + i]}${startX + 1}`;
+                if (this.boardState[coordinate] === 'occupied') {
+                    return false; // Overlap with an existing ship
+                }
+            }
+        } else {
+            if (startX + shipSize > 8) return false; // Ship extends past the bottom edge
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY]}${startX + 1 + i}`;
+                if (this.boardState[coordinate] === 'occupied') {
+                    return false; // Overlap with an existing ship
+                }
+            }
         }
-        return coordinates;
+        return true;
     }
 
-    // Validate ship placement
-    validatePlacement(coordinates) {
-        return coordinates.every(([row, col]) => 
-            row >= 0 && row < this.boardSize && // Within row bounds
-            col >= 0 && col < this.boardSize && // Within column bounds
-            this.board[row][col] === 0 // Not overlapping another ship
-        );
+    // Function to place the ship on the board
+    placeShip(startX, startY, shipSize, direction) {
+        if (direction === 'horizontal') {
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY + i]}${startX + 1}`;
+                this.boardState[coordinate] = 'occupied'; // Mark the square as occupied
+                this.placedShips.push(coordinate); // Track the placed ship
+                this.highlightShip(coordinate); // Optional: Visual highlight
+            }
+        } else {
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY]}${startX + 1 + i}`;
+                this.boardState[coordinate] = 'occupied'; // Mark the square as occupied
+                this.placedShips.push(coordinate); // Track the placed ship
+                this.highlightShip(coordinate); // Optional: Visual highlight
+            }
+        }
+        return true;
     }
 
-    // Mark ship on the board
-    markShipOnBoard(coordinates) {
-        coordinates.forEach(([row, col]) => {
-            this.board[row][col] = 1; // 1 indicates part of a ship
-        });
-    }
-
-    // Debugging tool: Print board to console (optional for testing)
-    printBoard() {
-        console.log(this.board.map(row => row.join(" ")).join("\n"));
+    // Highlight the placed ship on the board (visual purposes only)
+    highlightShip(coordinate) {
+        const square = document.getElementById(`npc_${coordinate}`);
+        if (square) {
+            square.style.backgroundColor = 'skyblue'; // Mark ship locations (blue for now)
+        }
     }
 }
 
-// Example usage
-const skynet = new Skynet();
-skynet.placeShips();
-skynet.printBoard(); // Outputs Skynet's hidden board (for debugging)
-
-
-// game flow
-
-
-
-// Check if both players are ready and prompt first move
-    function checkAndStartGame(placedShips, shipsPlaced) {
-        if (placedShips && shipsPlaced) {
-            // Randomly select the first move
-            const firstPlayer = Math.random() < 0.5 ? "Player 1" : "Skynet";
-            alert(`${firstPlayer} will make the first move.`);
-            return true
-        }
+class RadarBoard extends Board {
+    constructor(boardElement) {
+        super(boardElement, "radar");
     }
 
+    // Method to retrieve NPC ship locations
+    retrieveNpcShipLocations(npcBoard) {
+        console.log("Radar knows NPC ship locations:", npcBoard.placedShips);
+    }
 
-    class GameFlow{ 
-        if (checkAndStartGame = true){
-            
-        }
-        constructor(radarBoard, mainBoard) {
-        this.radarBoard = radarBoard; // Reference to radar board
-        this.mainBoard = mainBoard;   // Reference to the main board
+    handlePlayerGuess(coordinate) {
+        // Handle player's guess, update the board state
+        // Provide feedback (hit/miss) to the player
+    }
+
+    updateBoardState(coordinate, result) {
+        // Update board state with result (hit or miss)
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const radarBoardElement = document.getElementById("radar_board");
+    const npcBoardElement = document.getElementById("npc_board");
+
+    // Create instance of the NpcBoard
+    const npcBoard = new NpcBoard(npcBoardElement);  
+    npcBoard.placeShipsRandomly();  // Place ships randomly on the NPC board
+
+    // Create instance of the RadarBoard
+    const radarBoard = new RadarBoard(radarBoardElement);  
+    
+    // Radar can now access and log NPC ship locations
+    radarBoard.retrieveNpcShipLocations(npcBoard);  // Log NPC ship locations
+});

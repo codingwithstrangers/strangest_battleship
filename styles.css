@@ -146,7 +146,7 @@ body{
 
 
 
-#board {
+#main_board {
     display: grid;
     grid-template-columns: repeat(8, 60px); /* Adjust square size for larger view */
     grid-template-rows: repeat(8, 60px);

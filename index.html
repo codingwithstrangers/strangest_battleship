@@ -160,11 +160,170 @@
 
                 </div>
                 <div id="board_wrapper">
-                    <div id="board">
+                    <div id="main_board">
                          <!-- Row 1 -->
     <!-- <div id="square" class="main_A1">A1</div>
     <div id="square" class="main_B1">B1</div>
-    <div id="square" class="main_C1">C1</div>
+    <div id="squa// Wait for DOM to load before setting up the boards
+document.addEventListener("DOMContentLoaded", () => {
+    const radarBoardElement = document.getElementById("radar_board");
+    const mainBoardElement = document.getElementById("main_board");
+    const npcBoardElement = document.getElementById("npc_board");
+
+    // Create the RadarBoard and NpcBoard instances
+    const radarBoard = new RadarBoard(radarBoardElement);  // Radar board instance
+    const npcBoard = new NpcBoard(npcBoardElement);        // NPC board instance (with ships)
+
+    // Place ships randomly on the NPC board
+    npcBoard.placeShipsRandomly();  
+
+    // Hide the NPC board without ships (the empty board)
+    const emptyBoard = document.getElementById("npc_board_empty");
+    if (emptyBoard) {
+        emptyBoard.style.display = "none"; // Hide the empty board
+    }
+
+    // Now, the radar board can retrieve NPC ship locations
+    radarBoard.retrieveNpcShipLocations(npcBoard);  // Log NPC ship locations
+});
+
+// Base Board class with common methods for all boards
+class Board {
+    constructor(boardElement, boardClassPrefix) {
+        this.boardElement = boardElement;
+        this.boardClassPrefix = boardClassPrefix;
+        this.boardSize = 8;  // Board is 8x8
+        this.columns = ["A", "B", "C", "D", "E", "F", "G", "H"];
+        this.boardState = {};  // Store board state (ship positions, hits/misses)
+        this.generateBoard();  // Generate the board grid
+    }
+
+    generateBoard() {
+        for (let row = 1; row <= this.boardSize; row++) {
+            for (let col = 0; col < this.boardSize; col++) {
+                const square = document.createElement("div");
+                const coordinate = `${this.columns[col]}${row}`;
+                square.id = `${this.boardClassPrefix}_${coordinate}`;
+                square.className = `${this.boardClassPrefix}_${coordinate}`;
+                square.textContent = coordinate;  // For debugging purposes (you can remove this)
+                square.style.width = "60px";
+                square.style.height = "60px";
+                square.style.border = "5px solid #333";
+                square.style.display = "flex";
+                square.style.justifyContent = "center";
+                square.style.alignItems = "center"; 
+                square.style.backgroundColor = "#ccc";
+                square.style.cursor = "pointer";
+                square.style.position = "relative";
+                square.style.fontSize = "18px";
+                square.addEventListener('click', () => this.handleClick(coordinate)); // Add click event
+                this.boardElement.appendChild(square);
+            }
+        }
+    }
+
+    // Handle click on a square (this method can be overridden in subclasses)
+    handleClick(coordinate) {
+        console.log(`${coordinate} clicked!`);
+        // Add logic for handling hits/misses or other interactions
+    }
+}
+
+// NpcBoard for handling ship placement and interaction
+class NpcBoard extends Board {
+    constructor(boardElement) {
+        super(boardElement, "npc");
+        this.ships = [5, 4, 3, 2, 2]; // Ship sizes: 5-spot, 4-spot, 3-spot, 2-spot, 2-spot
+        this.placedShips = []; // Track placed ship coordinates
+        this.shipCount = 0; // Number of ships placed
+    }
+
+    placeShipsRandomly() {
+        while (this.shipCount < 5) {
+            const shipSize = this.ships[this.shipCount];
+            let placed = false;
+
+            while (!placed) {
+                const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+                const startX = Math.floor(Math.random() * 8);
+                const startY = Math.floor(Math.random() * 8);
+
+                if (this.isValidPlacement(startX, startY, shipSize, direction)) {
+                    placed = this.placeShip(startX, startY, shipSize, direction);
+                    this.shipCount++;
+                }
+            }
+        }
+    }
+
+    isValidPlacement(startX, startY, shipSize, direction) {
+        if (direction === 'horizontal') {
+            if (startY + shipSize > 8) return false;
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY + i]}${startX + 1}`;
+                if (this.boardState[coordinate] === 'occupied') {
+                    return false;
+                }
+            }
+        } else {
+            if (startX + shipSize > 8) return false;
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY]}${startX + 1 + i}`;
+                if (this.boardState[coordinate] === 'occupied') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    placeShip(startX, startY, shipSize, direction) {
+        if (direction === 'horizontal') {
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY + i]}${startX + 1}`;
+                this.boardState[coordinate] = 'occupied';
+                this.placedShips.push(coordinate);
+                this.highlightShip(coordinate);
+            }
+        } else {
+            for (let i = 0; i < shipSize; i++) {
+                const coordinate = `${this.columns[startY]}${startX + 1 + i}`;
+                this.boardState[coordinate] = 'occupied';
+                this.placedShips.push(coordinate);
+                this.highlightShip(coordinate);
+            }
+        }
+    }
+
+    highlightShip(coordinate) {
+        const square = document.getElementById(`npc_${coordinate}`);
+        if (square) {
+            square.style.backgroundColor = 'skyblue'; // For visual indication of ship locations
+        }
+    }
+
+    getShipPlacement() {
+        return this.placedShips; // Returns all placed ship coordinates
+    }
+}
+
+// RadarBoard for player interaction and tracking
+class RadarBoard extends Board {
+    constructor(boardElement) {
+        super(boardElement, "radar");
+    }
+
+    retrieveNpcShipLocations(npcBoard) {
+        const npcShipLocations = npcBoard.getShipPlacement();
+        console.log("Radar knows NPC ship locations:", npcShipLocations);
+    }
+
+    handlePlayerGuess(coordinate) {
+        console.log(`${coordinate} guessed!`);
+        // Logic for handling hits/misses, updating the board state, etc.
+    }
+}
+re" class="main_C1">C1</div>
     <div id="square" class="main_D1">D1</div>
     <div id="square" class="main_E1">E1</div>
     <div id="square" class="main_F1">F1</div>
@@ -246,16 +405,7 @@
 
                 <div id="npc_board_wrapper">
                     <div id="npc_board">
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-                        <div id="npc_square"></div>
-
-                        <div id="npc_square"></div>
+                        <!-- <div id="npc_square"></div>
                         <div id="npc_square"></div>
                         <div id="npc_square"></div>
                         <div id="npc_square"></div>
@@ -317,6 +467,15 @@
                         <div id="npc_square"></div>
                         <div id="npc_square"></div>
                         <div id="npc_square"></div>
+
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div>
+                        <div id="npc_square"></div> -->
 
                     </div>
 
