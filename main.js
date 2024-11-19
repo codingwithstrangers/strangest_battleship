@@ -876,18 +876,7 @@ setInterval(() => {
 // refactor 2
 
 // making the board
-document.addEventListener("DOMContentLoaded", () => {
-    // const radarBoard = document.getElementById("radar_board");
-    const mainBoard = document.getElementById("main_board");
-    // const npcBoard = document.getElementById("npc_board");
 
-    // Create instances of the Board class for each of the 3 boards
-    // const radar = new Board(radarBoard, "radar");
-    const main = new Board(mainBoard, "main");
-    // const npc = new Board(npcBoard, "npc");
-    
-    
-});
 
 class Board {
     constructor(boardElement, boardClassPrefix) {
@@ -930,8 +919,43 @@ class NpcBoard extends Board {
         this.placedShips = []; // Track placed ship coordinates
         this.shipCount = 0; // Count of ships placed
         this.boardState = {}; // Store board state (occupied or empty)
+        this.attachResetListener(); // Attach the reset listener
+        this.placeShipsRandomly(); // Initial random placement
     }
 
+    // Attach event listener to the reset button
+    attachResetListener() {
+        const resetButton = document.querySelector(".button"); // Button to trigger the reset
+        resetButton.addEventListener('click', () => {
+            this.resetBoard(); // Reset the NPC board when the button is clicked
+        });
+    }
+    
+    resetBoard() {
+        // Clear the tracking arrays and counters
+        this.placedShips = [];
+        this.shipCount = 0;
+        this.boardState = {};
+    
+        // Reset the visual representation of the board
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const coordinate = `${this.columns[j]}${i + 1}`;
+                const npcsquare = document.getElementById(`npc_${coordinate}`);
+    
+                if (npcsquare) {
+                    npcsquare.style.backgroundColor = '#ccc'; // Reset square color to default
+                }
+            }
+        }
+    
+        // Place new ships randomly
+        this.placeShipsRandomly();
+    
+        console.log("NPC Board has been reset with new ships.");
+    }
+    
+    
     // Function to place all ships randomly on the board
     placeShipsRandomly() {
         while (this.shipCount < 5) {
@@ -955,6 +979,8 @@ class NpcBoard extends Board {
         // Log the ship locations after placing them
         console.log("NPC Board Ship Locations:", this.placedShips);
     }
+
+
 
     // Check if the ship can be placed without overlapping
     isValidPlacement(startX, startY, shipSize, direction) {
@@ -1008,36 +1034,367 @@ class NpcBoard extends Board {
 }
 
 class RadarBoard extends Board {
-    constructor(boardElement) {
+    constructor(boardElement, gameFlow) {
         super(boardElement, "radar");
+        // super(boardElement, "main");
+        this.ships = [5, 4, 3, 2, 2]; // Ship sizes
+        this.shipCount = 0;
+        this.gameFlow = gameFlow;
+        this.placedShips = []; // Tracks coordinates of all placed ships
+        this.shipPlacementHistory = []; // Tracks placement details for undo
+        this.shipPlacementInProgress = false;
+        this.playerAttempts = {};    // Tracks player attempts and their results
+        this.attachResetListener(); // Attach the reset listener
+        this.boardElement = boardElement;
+        this.initializeBoard();
     }
+
+    // Attach event listener to the reset button
+    attachResetListener() {
+        const resetButton = document.querySelector(".button"); // Button to trigger the reset
+        resetButton.addEventListener('click', () => {
+            this.resetBoard(); // Reset this radar board when the button is clicked
+        });
+    }
+    // lets the game flow know the board is set 
+    placeAndLogShip() {
+        // ...
+        if (this.shipCount >= this.ships.length) {
+            // ...
+            this.startGameCallback();
+        }
+    }
+
+    // Function to reset the radar board
+    resetBoard() {
+        this.placedShips = [];
+        this.shipCount = 0;
+        this.boardState = {};
+    
+        // Reset the board visually (clear ship locations, etc.)
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const coordinate = `${this.columns[j]}${i + 1}`;
+                const radarSquare = document.getElementById(`radar_${coordinate}`);
+                const mainSquare = document.getElementById(`main_${coordinate}`);
+    
+                if (radarSquare) {
+                    radarSquare.style.backgroundColor = '#ccc'; // Reset radar board square color
+                }
+                if (mainSquare) {
+                    mainSquare.style.backgroundColor = '#ccc'; // Reset main board square color
+                }
+            }
+        }
+    
+        console.log("Radar Board and Main Board Reset.");
+    }
+    
+
+    // Log placed ships to the console with coordinates in one line
+    logShipLocations() {
+        console.log("Current Radar Ship Locations:");
+        this.placedShips.forEach((coord, index) => {
+            const shipIndex = this.shipCount - 1; // Get the index of the last ship placed
+            const shipSize = this.ships[shipIndex]; // Get the size of the ship
+            const shipName = `Ship ${shipSize}`; // Name the ship based on its size
+
+            // Group coordinates for the same ship in a single string
+            let shipCoords = this.placedShips.filter(c => c.startsWith(coord[0]) && c.length === coord.length)
+                .join(', '); // Join coordinates with commas
+
+            console.log(`${shipName} is placed at coordinates: ${shipCoords}`);
+        });
+    }
+
+    // New function to place a ship and log the placement
+    placeAndLogShip() {
+        if (this.shipCount >= this.ships.length) {
+          alert("All ships are placed");
+          const undoButton = document.querySelector(".undo");
+          undoButton.disabled = true; // Disable the button
+          return;
+        }
+       
+
+        this.shipPlacementInProgress = true;
+        const shipSize = this.ships[this.shipCount];
+        let placed = false;
+
+        // Attempt to randomly place the ship
+        while (!placed) {
+            const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+            const startX = Math.floor(Math.random() * 8); // Row (0-7)
+            const startY = Math.floor(Math.random() * 8); // Column (0-7)
+
+            if (this.isValidPlacement(startX, startY, shipSize, direction)) {
+                placed = this.placeShipOnBoard(startX, startY, shipSize, direction);
+                this.shipPlacementHistory.push({ startX, startY, shipSize, direction });
+                this.shipCount++;
+            }
+        }
+
+        this.shipPlacementInProgress = false;
+        this.logShipLocations(); // Log ship locations after placement
+    }
+
+    // Check if a ship can be placed at a location without overlapping
+    isValidPlacement(startX, startY, shipSize, direction) {
+        if (direction === 'horizontal') {
+            if (startY + shipSize > 8) return false;
+            for (let i = 0; i < shipSize; i++) {
+                const coord = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+                if (this.placedShips.includes(coord)) {
+                    return false;
+                }
+            }
+        } else {
+            if (startX + shipSize > 8) return false;
+            for (let i = 0; i < shipSize; i++) {
+                const coord = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+                if (this.placedShips.includes(coord)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Place a ship on the board
+    placeShipOnBoard(startX, startY, shipSize, direction) {
+        const shipCoordinates = [];
+        if (direction === 'horizontal') {
+            for (let i = 0; i < shipSize; i++) {
+                const coord = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+                this.placedShips.push(coord);
+                shipCoordinates.push(coord);
+                this.highlightShipOnBoard(coord);
+            }
+        } else {
+            for (let i = 0; i < shipSize; i++) {
+                const coord = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+                this.placedShips.push(coord);
+                shipCoordinates.push(coord);
+                this.highlightShipOnBoard(coord);
+            }
+        }
+        console.log(`Ship ${shipSize} placed at coordinates: ${shipCoordinates.join(', ')}`);
+        return true;
+    }
+
+    // Highlight the ship on both radar and main boards
+    highlightShipOnBoard(coordinate) {
+        const radarSquare = document.getElementById(`radar_${coordinate}`);
+        const mainSquare = document.getElementById(`main_${coordinate}`);
+
+        if (radarSquare && mainSquare) {
+            radarSquare.style.backgroundColor = 'blue';
+            mainSquare.style.backgroundColor = 'blue';
+        }
+    }
+
+    // Undo the last ship placement
+    undoLastShip() {
+        if (this.shipPlacementHistory.length > 0) {
+            const lastShip = this.shipPlacementHistory.pop();
+            this.removeShipFromBoard(lastShip);
+            this.shipCount--;
+        } else {
+            alert("No ships to undo!");
+        }
+    }
+
+    // Remove a ship from the board
+    removeShipFromBoard(ship) {
+        const { startX, startY, shipSize, direction } = ship;
+
+        if (direction === 'horizontal') {
+            for (let i = 0; i < shipSize; i++) {
+                const coord = `${String.fromCharCode(65 + startY + i)}${startX + 1}`;
+                this.placedShips = this.placedShips.filter(c => c !== coord);
+                this.resetBoardSquare(coord);
+            }
+        } else {
+            for (let i = 0; i < shipSize; i++) {
+                const coord = `${String.fromCharCode(65 + startY)}${startX + 1 + i}`;
+                this.placedShips = this.placedShips.filter(c => c !== coord);
+                this.resetBoardSquare(coord);
+            }
+        }
+    }
+
+    // Reset the visual appearance of a board square
+    resetBoardSquare(coordinate) {
+        const radarSquare = document.getElementById(`radar_${coordinate}`);
+        const mainSquare = document.getElementById(`main_${coordinate}`);
+
+        if (radarSquare && mainSquare) {
+            radarSquare.style.backgroundColor = '#ccc'; // Default color
+            mainSquare.style.backgroundColor = '#ccc'; // Default color
+        }
+    }  
+
+    
 
     // Method to retrieve NPC ship locations
     retrieveNpcShipLocations(npcBoard) {
         console.log("Radar knows NPC ship locations:", npcBoard.placedShips);
     }
 
-    handlePlayerGuess(coordinate) {
-        // Handle player's guess, update the board state
-        // Provide feedback (hit/miss) to the player
+    initializeBoard() {
+        // ... other initialization
+        this.boardElement.addEventListener('dblclick', (event) => {
+            const selectedSquare = event.target;
+            this.triggerPlayerMove(selectedSquare);
+        });
     }
 
-    updateBoardState(coordinate, result) {
-        // Update board state with result (hit or miss)
+    triggerPlayerMove(selectedSquare) {
+        // Trigger the player's move in the GameFlow
+        this.gameFlow.playerMove(selectedSquare);
+    }
+
+}
+
+
+// player1
+class Player1 {
+    constructor(radarBoard, npcBoard) {
+        this.radarBoard = radarBoard;
+        this.npcBoard = npcBoard;
+    }
+
+    makeMove(selectedSquare) {
+        const result = this.npcBoard.checkHit(selectedSquare);
+        this.radarBoard.updateSquare(selectedSquare, result);
+        return result;
     }
 }
 
+
+// skynet
+class Skynet {
+    constructor(radarBoard, npcBoard) {
+        this.radarBoard = radarBoard;
+        this.npcBoard = npcBoard;
+        this.targetedSquares = [];
+    }
+
+    makeMove() {
+        let randomX, randomY;
+        do {
+            randomX = Math.floor(Math.random() * 8);
+            randomY = Math.floor(Math.random() * 8);
+        } while (this.targetedSquares.includes(`${randomX},${randomY}`));
+
+        this.targetedSquares.push(`${randomX},${randomY}`);
+
+        const selectedSquare = this.radarBoard.getSquare(randomX, randomY);
+        const result = this.radarBoard.targetSquare(selectedSquare);
+
+        return result;
+    }
+}
+
+
+// game Logic
+class GameFlow {
+    constructor(radarBoard, npcBoard) {
+        this.radarBoard = radarBoard;
+        radarBoard.gameFlow = this;
+        this.npcBoard = npcBoard;
+        this.player1 = new Player1(radarBoard, npcBoard);
+        this.skynet = new Skynet(radarBoard, npcBoard);
+        this.currentPlayer = 'player1';
+        this.hits = 0;
+        this.maxHits = 16; // Assuming a standard 8x8 board with 5 ships
+    }
+
+    startGame() {
+        console.log("Game started!");
+        this.takeTurn();
+    }
+
+    takeTurn() {
+        let result;
+        if (this.currentPlayer === 'player1') {
+            // Wait for player's move (handled by RadarBoard's event listener)
+            // ...
+        } else if (this.currentPlayer === 'skynet') {
+            result = this.skynet.makeMove();
+        }
+
+        // Check for hit and update hit count
+        if (result === 'hit') {
+            this.hits++;
+        }
+
+        // Check for win condition
+        if (this.hits === this.maxHits) {
+            console.log(`${this.currentPlayer} wins!`);
+            return;
+        }
+
+        // Switch turns
+        this.currentPlayer = this.currentPlayer === 'player1' ? 'skynet' : 'player1';
+        this.takeTurn();
+    }
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
-    const radarBoardElement = document.getElementById("radar_board");
+    // const radarBoardElement = document.getElementById("radar_board");
     const npcBoardElement = document.getElementById("npc_board");
+    // Instantiate the GameFlow class
+    const gameFlow = new GameFlow(RadarBoard, npcBoardElement);
 
     // Create instance of the NpcBoard
     const npcBoard = new NpcBoard(npcBoardElement);  
     npcBoard.placeShipsRandomly();  // Place ships randomly on the NPC board
 
     // Create instance of the RadarBoard
-    const radarBoard = new RadarBoard(radarBoardElement);  
+    // const radarBoard = new RadarBoard(radarBoardElement);  
     
     // Radar can now access and log NPC ship locations
     radarBoard.retrieveNpcShipLocations(npcBoard);  // Log NPC ship locations
+});
+
+const radarBoardElement = document.getElementById("radar_board");
+const mainBoardElement = document.getElementById("main_board");
+const player1 = new Player1(npcBoardElement, radarBoardElement)
+
+// Create instance of RadarBoard
+const radarBoard = new RadarBoard(radarBoardElement);
+
+// Button click handler to place ships randomly
+const randomPlaceButton = document.querySelector(".random");
+randomPlaceButton.addEventListener('click', () => {
+    radarBoard.placeAndLogShip(); // Call placeAndLogShip method from RadarBoard instance
+});
+
+// Button click handler to undo last ship placement
+const undoButton = document.querySelector(".undo");
+undoButton.addEventListener('click', () => {
+    radarBoard.undoLastShip(); // Call undoLastShip method from RadarBoard instance
+});
+
+// Example for handling player guesses (double-click on radar squares)
+radarBoardElement.addEventListener('dblclick', (event) => {
+    if (event.target && event.target.id && event.target.id.startsWith('radar_')) {
+        const coordinate = event.target.id.replace("radar_", "");
+        radarBoard.handlePlayerGuess(coordinate); // Handle player guess
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // const radarBoard = document.getElementById("radar_board");
+    const mainBoard = document.getElementById("main_board");
+    // const npcBoard = document.getElementById("npc_board");
+
+    // Create instances of the Board class for each of the 3 boards
+    // const radar = new Board(radarBoard, "radar");
+    const main = new Board(mainBoard, "main");
+    // const npc = new Board(npcBoard, "npc");
+    
+    
 });
