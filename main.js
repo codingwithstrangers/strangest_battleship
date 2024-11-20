@@ -25,9 +25,9 @@ function updateSunPosition() {
         sunScale = 5 - percentProgress * (4);
     } else if (hours >= 12 && hours < 18) {
         const percentProgress = ((hours - 12) * 3600 + minutes * 60 + seconds) / (6 * 3600);
-        sunLeft = 46 + percentProgress * (30);
-        sunTop = 10 + percentProgress * (10);
-        sunScale = 2 + percentProgress * 6;
+        sunLeft = 56 + percentProgress * (30);
+        sunTop = 20 + percentProgress * (10);
+        sunScale = 5 + percentProgress * -2;
     } else {
         sunLeft = 106;
         sunTop = 83;
@@ -1046,7 +1046,7 @@ class RadarBoard extends Board {
         this.playerAttempts = {};    // Tracks player attempts and their results
         this.attachResetListener(); // Attach the reset listener
         this.boardElement = boardElement;
-        this.initializeBoard();
+        
     }
 
     // Attach event listener to the reset button
@@ -1057,13 +1057,13 @@ class RadarBoard extends Board {
         });
     }
     // lets the game flow know the board is set 
-    placeAndLogShip() {
-        // ...
-        if (this.shipCount >= this.ships.length) {
-            // ...
-            this.startGameCallback();
-        }
-    }
+    // placeAndLogShip() {
+    //     // ...
+    //     if (this.shipCount >= this.ships.length) {
+    //         // ...
+    //         this.startGameCallback();
+    //     }
+    // }
 
     // Function to reset the radar board
     resetBoard() {
@@ -1110,10 +1110,17 @@ class RadarBoard extends Board {
     // New function to place a ship and log the placement
     placeAndLogShip() {
         if (this.shipCount >= this.ships.length) {
-          alert("All ships are placed");
-          const undoButton = document.querySelector(".undo");
-          undoButton.disabled = true; // Disable the button
-          return;
+            alert("All ships are placed");
+            this.gameFlow.manageTurns();
+            const undoButton = document.querySelector(".undo");
+            undoButton.disabled = true; // Disable the undo button
+            
+            
+            // // Notify GameFlow to start the game
+            // if (this.gameFlow) {
+            //     this.gameFlow.manageTurns(); // Start the turn-based gameplay
+            // }
+            return;
         }
        
 
@@ -1240,19 +1247,7 @@ class RadarBoard extends Board {
     retrieveNpcShipLocations(npcBoard) {
         console.log("Radar knows NPC ship locations:", npcBoard.placedShips);
     }
-
-    initializeBoard() {
-        // ... other initialization
-        this.boardElement.addEventListener('dblclick', (event) => {
-            const selectedSquare = event.target;
-            this.triggerPlayerMove(selectedSquare);
-        });
-    }
-
-    triggerPlayerMove(selectedSquare) {
-        // Trigger the player's move in the GameFlow
-        this.gameFlow.playerMove(selectedSquare);
-    }
+   
 
 }
 
@@ -1262,14 +1257,82 @@ class Player1 {
     constructor(radarBoard, npcBoard) {
         this.radarBoard = radarBoard;
         this.npcBoard = npcBoard;
+        this.hasClicked = false; // Track whether a click has occurred
+        this.addEventListener
+        
     }
 
-    makeMove(selectedSquare) {
-        const result = this.npcBoard.checkHit(selectedSquare);
-        this.radarBoard.updateSquare(selectedSquare, result);
-        return result;
+    takeTurn() {
+        return new Promise((resolve) => {
+            // Reset the click state at the start of the turn
+            this.hasClicked = false;
+
+            const handleSquareClick = (event) => {
+                const square = event.target;
+
+                // Validate the clicked square
+                if (!this.isValidSquare(square)) {
+                    console.log("Invalid square. Choose another.");
+                    return;
+                }
+
+                // Mark the square as clicked
+                this.hasClicked = true; // Set the flag
+                this.markSquareAsClicked(square);
+
+                const squareId = square.id;
+                const hit = this.checkHit(squareId);
+
+                // Update the square's visual feedback
+                this.updateSquareFeedback(square, hit);
+
+                // Log the result
+                console.log(
+                    `Player1 double-clicked ${squareId} and it was a ${
+                        hit ? "hit" : "miss"
+                    }.`
+                );
+
+                // Resolve the Promise with turn data
+                resolve({ hit, squareId });
+
+                // Remove the event listener
+                this.radarBoard.boardElement.removeEventListener(
+                    "dblclick",
+                    handleSquareClick
+                );
+            };
+
+            // Add a double-click listener to the radar board
+            this.radarBoard.boardElement.addEventListener("dblclick", handleSquareClick);
+
+            // Periodically check if the user has clicked
+            const intervalId = setInterval(() => {
+                if (this.hasClicked) {
+                    clearInterval(intervalId); // Stop checking if a click occurred
+                }
+            }, 1000); // Check every second
+        });
+    }
+
+    isValidSquare(square) {
+        return square.classList.contains("square") && !square.dataset.clicked;
+    }
+
+    markSquareAsClicked(square) {
+        square.dataset.clicked = true;
+    }
+
+    updateSquareFeedback(square, hit) {
+        square.classList.add(hit ? "hit" : "miss");
+    }
+
+    checkHit(squareId) {
+        const npcShipLocations = this.npcBoard.getShipLocations();
+        return npcShipLocations.includes(squareId);
     }
 }
+
 
 
 // skynet
@@ -1277,22 +1340,23 @@ class Skynet {
     constructor(radarBoard, npcBoard) {
         this.radarBoard = radarBoard;
         this.npcBoard = npcBoard;
-        this.targetedSquares = [];
     }
 
-    makeMove() {
-        let randomX, randomY;
-        do {
-            randomX = Math.floor(Math.random() * 8);
-            randomY = Math.floor(Math.random() * 8);
-        } while (this.targetedSquares.includes(`${randomX},${randomY}`));
+    takeTurn() {
+        // Implement Skynet's turn logic, e.g., randomly pick an unmarked square
+        const squareId = this.pickSquare();
+        const hit = this.checkHit(squareId);
+        return { hit, squareId };
+    }
 
-        this.targetedSquares.push(`${randomX},${randomY}`);
+    pickSquare() {
+        // Logic to pick a square (e.g., randomly select from untried squares)
+        return "B2"; // Example
+    }
 
-        const selectedSquare = this.radarBoard.getSquare(randomX, randomY);
-        const result = this.radarBoard.targetSquare(selectedSquare);
-
-        return result;
+    checkHit(squareId) {
+        // Check if the square hits a player's ship
+        return Math.random() > 0.5; // Example logic
     }
 }
 
@@ -1306,95 +1370,80 @@ class GameFlow {
         this.player1 = new Player1(radarBoard, npcBoard);
         this.skynet = new Skynet(radarBoard, npcBoard);
         this.currentPlayer = 'player1';
-        this.hits = 0;
-        this.maxHits = 16; // Assuming a standard 8x8 board with 5 ships
+        this.hits = { player1: 0, skynet: 0 };
+        this.maxHits = 16; // First to 16 hits wins
+    }
+// FSM-based turn manager
+async manageTurns() {
+    // Check if a win condition is met
+    if (this.hits.player1 >= this.maxHits) {
+        console.log("Heero wins!");
+        return;
+    }
+    if (this.hits.skynet >= this.maxHits) {
+        console.log("Skynet wins!");
+        return;
     }
 
-    startGame() {
-        console.log("Game started!");
-        this.takeTurn();
+    // Execute the turn for the current player
+    if (this.currentPlayer === 'player1') {
+        const turnData = await this.player1.takeTurn(); 
+        const { hit, squareId } = this.player1.takeTurn();
+        this.storeTurnInfo('player1', hit, squareId);
+        this.currentPlayer = 'skynet'; // Switch turns
+    } else if (this.currentPlayer === 'skynet') {
+        const turnData = await this.player1.takeTurn(); 
+        const { hit, squareId } = this.skynet.takeTurn();
+        this.storeTurnInfo('skynet', hit, squareId);
+        this.currentPlayer = 'player1'; // Switch turns
     }
 
-    takeTurn() {
-        let result;
-        if (this.currentPlayer === 'player1') {
-            // Wait for player's move (handled by RadarBoard's event listener)
-            // ...
-        } else if (this.currentPlayer === 'skynet') {
-            result = this.skynet.makeMove();
-        }
-
-        // Check for hit and update hit count
-        if (result === 'hit') {
-            this.hits++;
-        }
-
-        // Check for win condition
-        if (this.hits === this.maxHits) {
-            console.log(`${this.currentPlayer} wins!`);
-            return;
-        }
-
-        // Switch turns
-        this.currentPlayer = this.currentPlayer === 'player1' ? 'skynet' : 'player1';
-        this.takeTurn();
-    }
+    // Recursively continue turns until the game ends
+    this.manageTurns();
 }
 
-
-document.addEventListener("DOMContentLoaded", () => {
-    // const radarBoardElement = document.getElementById("radar_board");
-    const npcBoardElement = document.getElementById("npc_board");
-    // Instantiate the GameFlow class
-    const gameFlow = new GameFlow(RadarBoard, npcBoardElement);
-
-    // Create instance of the NpcBoard
-    const npcBoard = new NpcBoard(npcBoardElement);  
-    npcBoard.placeShipsRandomly();  // Place ships randomly on the NPC board
-
-    // Create instance of the RadarBoard
-    // const radarBoard = new RadarBoard(radarBoardElement);  
-    
-    // Radar can now access and log NPC ship locations
-    radarBoard.retrieveNpcShipLocations(npcBoard);  // Log NPC ship locations
-});
-
-const radarBoardElement = document.getElementById("radar_board");
-const mainBoardElement = document.getElementById("main_board");
-const player1 = new Player1(npcBoardElement, radarBoardElement)
-
-// Create instance of RadarBoard
-const radarBoard = new RadarBoard(radarBoardElement);
-
-// Button click handler to place ships randomly
-const randomPlaceButton = document.querySelector(".random");
-randomPlaceButton.addEventListener('click', () => {
-    radarBoard.placeAndLogShip(); // Call placeAndLogShip method from RadarBoard instance
-});
-
-// Button click handler to undo last ship placement
-const undoButton = document.querySelector(".undo");
-undoButton.addEventListener('click', () => {
-    radarBoard.undoLastShip(); // Call undoLastShip method from RadarBoard instance
-});
-
-// Example for handling player guesses (double-click on radar squares)
-radarBoardElement.addEventListener('dblclick', (event) => {
-    if (event.target && event.target.id && event.target.id.startsWith('radar_')) {
-        const coordinate = event.target.id.replace("radar_", "");
-        radarBoard.handlePlayerGuess(coordinate); // Handle player guess
+// Store turn info and update hit counts
+storeTurnInfo(player, hit, squareId) {
+    console.log(`${player} attacked square ${squareId} and it was a ${hit ? 'hit' : 'miss'}.`);
+    if (hit) {
+        this.hits[player]++;
     }
-});
+}
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-    // const radarBoard = document.getElementById("radar_board");
+    // Get the board elements
+    const radarBoardElement = document.getElementById("radar_board");
+    const npcBoardElement = document.getElementById("npc_board");
+    const mainBoardElement = document.getElementById("main_board");
     const mainBoard = document.getElementById("main_board");
-    // const npcBoard = document.getElementById("npc_board");
 
-    // Create instances of the Board class for each of the 3 boards
-    // const radar = new Board(radarBoard, "radar");
+    // Instantiate the GameFlow class
+    const gameFlow = new GameFlow(radarBoardElement, npcBoardElement);
+    gameFlow.manageTurns();
+
+    // Create an instance of NpcBoard and place ships randomly
+    const npcBoard = new NpcBoard(npcBoardElement);
+    npcBoard.placeShipsRandomly();
+
+    // Create an instance of RadarBoard
+    const radarBoard = new RadarBoard(radarBoardElement, gameFlow);
     const main = new Board(mainBoard, "main");
-    // const npc = new Board(npcBoard, "npc");
-    
+
+    // Radar can now access and log NPC ship locations
+    radarBoard.retrieveNpcShipLocations(npcBoard);
+
+    // Button click handler to place ships randomly
+    const randomPlaceButton = document.querySelector(".random");
+    randomPlaceButton.addEventListener('click', () => {
+        radarBoard.placeAndLogShip(); // Call placeAndLogShip method from RadarBoard instance
+    });
+
+    // Button click handler to undo last ship placement
+    const undoButton = document.querySelector(".undo");
+    undoButton.addEventListener('click', () => {
+        radarBoard.undoLastShip(); // Call undoLastShip method from RadarBoard instance
+    });
     
 });
+
