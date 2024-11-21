@@ -1107,22 +1107,23 @@ class RadarBoard extends Board {
         });
     }
 
-    // New function to place a ship and log the placement
     placeAndLogShip() {
         if (this.shipCount >= this.ships.length) {
             alert("All ships are placed");
-            this.gameFlow.manageTurns();
             const undoButton = document.querySelector(".undo");
-            undoButton.disabled = true; // Disable the undo button
-            
-            
-            // // Notify GameFlow to start the game
-            // if (this.gameFlow) {
-            //     this.gameFlow.manageTurns(); // Start the turn-based gameplay
-            // }
+            if (undoButton) undoButton.disabled = true;
+    
+            console.log("Calling gameFlow.manageTurns()"); // Debug log
+            if (this.gameFlow) {
+                this.gameFlow.manageTurns();
+                console.log("gameFlow.manageTurns() was successfully called");
+            } else {
+                console.error("this.gameFlow is undefined");
+            }
             return;
         }
-       
+    
+     
 
         this.shipPlacementInProgress = true;
         const shipSize = this.ships[this.shipCount];
@@ -1254,7 +1255,7 @@ class RadarBoard extends Board {
 
 // player1
 class Player1 {
-    constructor(radarBoard, npcBoard) {
+    constructor(radarBoard, npcBoard, gameFlow) {
         this.radarBoard = radarBoard;
         this.npcBoard = npcBoard;
         this.hasClicked = false; // Track whether a click has occurred
@@ -1264,75 +1265,10 @@ class Player1 {
 
     takeTurn() {
         return new Promise((resolve) => {
-            // Reset the click state at the start of the turn
-            this.hasClicked = false;
-
-            const handleSquareClick = (event) => {
-                const square = event.target;
-
-                // Validate the clicked square
-                if (!this.isValidSquare(square)) {
-                    console.log("Invalid square. Choose another.");
-                    return;
-                }
-
-                // Mark the square as clicked
-                this.hasClicked = true; // Set the flag
-                this.markSquareAsClicked(square);
-
-                const squareId = square.id;
-                const hit = this.checkHit(squareId);
-
-                // Update the square's visual feedback
-                this.updateSquareFeedback(square, hit);
-
-                // Log the result
-                console.log(
-                    `Player1 double-clicked ${squareId} and it was a ${
-                        hit ? "hit" : "miss"
-                    }.`
-                );
-
-                // Resolve the Promise with turn data
-                resolve({ hit, squareId });
-
-                // Remove the event listener
-                this.radarBoard.boardElement.removeEventListener(
-                    "dblclick",
-                    handleSquareClick
-                );
-            };
-
-            // Add a double-click listener to the radar board
-            this.radarBoard.boardElement.addEventListener("dblclick", handleSquareClick);
-
-            // Periodically check if the user has clicked
-            const intervalId = setInterval(() => {
-                if (this.hasClicked) {
-                    clearInterval(intervalId); // Stop checking if a click occurred
-                }
-            }, 1000); // Check every second
-        });
-    }
-
-    isValidSquare(square) {
-        return square.classList.contains("square") && !square.dataset.clicked;
-    }
-
-    markSquareAsClicked(square) {
-        square.dataset.clicked = true;
-    }
-
-    updateSquareFeedback(square, hit) {
-        square.classList.add(hit ? "hit" : "miss");
-    }
-
-    checkHit(squareId) {
-        const npcShipLocations = this.npcBoard.getShipLocations();
-        return npcShipLocations.includes(squareId);
-    }
-}
-
+            
+        })
+    
+}}
 
 
 // skynet
@@ -1388,7 +1324,7 @@ async manageTurns() {
     // Execute the turn for the current player
     if (this.currentPlayer === 'player1') {
         const turnData = await this.player1.takeTurn(); 
-        const { hit, squareId } = this.player1.takeTurn();
+        const { hit, squareId } = turnData;
         this.storeTurnInfo('player1', hit, squareId);
         this.currentPlayer = 'skynet'; // Switch turns
     } else if (this.currentPlayer === 'skynet') {
@@ -1446,4 +1382,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
 });
-
