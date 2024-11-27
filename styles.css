@@ -249,9 +249,9 @@ body{
     width: 60px; 
     height: 60px;
     background-color: #ccc;
-    border: 5px solid #333;
+    border: 5px solid #333;}
     
-
+/* 
 cursor:pointer;
 position:relative;
 padding:10px 20px;
@@ -294,7 +294,7 @@ border-bottom-left-radius:0px;
      border-color:white;
   }
 }
-}
+} */
 
 #user_container{
     display: flex;
@@ -413,7 +413,8 @@ border-bottom-left-radius:0px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 120px;
+  gap: 60px;
+  padding: 10px;
   /* background: #27282c; */
 }
 

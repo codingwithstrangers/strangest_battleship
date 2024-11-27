@@ -123,3 +123,97 @@ setInterval(() => {
 
 // battle ship code
 // battle ship code
+
+
+// Array to store all selected spots
+let selectedSquares = []; // Array to store the selected squares
+
+function pickASpot() {
+    const radarBoard = document.getElementById("radar_board");
+
+    radarBoard.addEventListener("dblclick", (event) => {
+        if (selectedSquares.length >= 16) {
+            console.log("All ships are placed. Double-clicking is now disabled.");
+            return; // Exit the function if 16 entries have been submitted
+        }
+
+        const clickedElement = event.target;
+        if (clickedElement && clickedElement.id === "radar_square") {
+            console.log(`Double-click detected on ${clickedElement.textContent.trim()}.`);
+
+            // Change the background color to royal blue
+            clickedElement.style.backgroundColor = 'royalblue';
+            
+            // Add the clicked element's text content to the selectedSquares array
+            if (!selectedSquares.includes(clickedElement.textContent.trim())) {
+                selectedSquares.push(clickedElement.textContent.trim());
+                console.log('Selected squares:', selectedSquares);
+
+                // Check if the number of selected squares has reached 16
+                if (selectedSquares.length === 16) {
+                    console.log("All ships are placed.");
+                    // Optionally, you can display a message on the UI here
+                    alert("All ships are placed.");
+
+                    // Remove the double-click event listener after 16 entries
+                    radarBoard.removeEventListener("dblclick", arguments.callee);
+                }
+            } else {
+                console.log(`Square ${clickedElement.textContent.trim()} is already selected.`);
+            }
+        }
+    });
+
+    radarBoard.addEventListener("click", (event) => {
+        const clickedElement = event.target;
+        if (clickedElement && clickedElement.id === "radar_square") {
+            console.log(`Single-click detected on ${clickedElement.textContent.trim()}.`);
+
+            // Check if the clicked square is in the selectedSquares array
+            const index = selectedSquares.indexOf(clickedElement.textContent.trim());
+            if (index !== -1) {
+                // Remove the clicked square from the array
+                selectedSquares.splice(index, 1);
+                console.log('Selected squares after removal:', selectedSquares);
+
+                // Revert the color of the clicked element to the previous state (e.g., white or default)
+                clickedElement.style.backgroundColor = ''; // You can set this to any previous color you wish
+            }
+        }
+    });
+}
+
+// Function to return the current selected squares if 16 spots are selected
+function getSelectedSquares() {
+    if (selectedSquares.length === 16) {
+        return selectedSquares;
+    } else {
+        alert('Please finish placing all ships before retrieving the selected squares.');
+    }
+}
+
+// Example usage: Call pickASpot to start the event listeners
+pickASpot();
+
+// To get the current state of selected squares
+console.log(getSelectedSquares());
+
+
+// Clear board 
+function clearBoard() {
+    const radarBoard = document.getElementById("radar_board");
+    const squares = radarBoard.getElementsByClassName("square");
+
+    // Clear the selectedSquares array
+    selectedSquares = [];
+
+    // Loop through each square and reset its background color
+    for (let square of squares) {
+        square.style.backgroundColor = ''; // Set to the default color, e.g., white or transparent
+    }
+
+    console.log('Board has been cleared.');
+}
+
+// Example usage: Call clearBoard when you want to reset the radar board
+// clearBoard();
