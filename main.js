@@ -126,10 +126,12 @@ setInterval(() => {
 
 
 // Array to store all selected spots
-let selectedSquares = []; // Array to store the selected squares
-
+let selectedSquares = [];
 function pickASpot() {
     const radarBoard = document.getElementById("radar_board");
+    let currentShipLength = 5; // Start with the length of the first ship
+    const shipLengths = [5, 4, 3, 2, 2]; // Define ship lengths
+    let placedShips = []; // Store valid ships
 
     radarBoard.addEventListener("dblclick", (event) => {
         if (selectedSquares.length >= 16) {
@@ -143,26 +145,48 @@ function pickASpot() {
 
             // Change the background color to royal blue
             clickedElement.style.backgroundColor = 'royalblue';
-            
+
             // Add the clicked element's text content to the selectedSquares array
             if (!selectedSquares.includes(clickedElement.textContent.trim())) {
                 selectedSquares.push(clickedElement.textContent.trim());
                 console.log('Selected squares:', selectedSquares);
 
-                // Check if the number of selected squares has reached 16
-                if (selectedSquares.length === 16) {
-                    console.log("All ships are placed.");
-                    // Optionally, you can display a message on the UI here
-                    alert("All ships are placed.");
+                // Validate the current selection when the required length is reached
+                if (selectedSquares.length === currentShipLength) {
+                    if (validateShipPlacement()) {
+                        // If valid, store the ship and prepare for the next one
+                        placedShips.push([...selectedSquares]);
+                        console.log("Placed ships:", placedShips);
 
-                    // Remove the double-click event listener after 16 entries
-                    radarBoard.removeEventListener("dblclick", arguments.callee);
+                        if (placedShips.length < shipLengths.length) {
+                            currentShipLength = shipLengths[placedShips.length];
+                            alert(`Now place a ship of length ${currentShipLength}.`);
+                        } else {
+                            alert("All ships are placed. Ready to start the game!");
+                        }
+
+                        // Clear the current selection
+                        selectedSquares = [];
+                    } else {
+                         // If invalid, remove the last square and reset its visual state
+                         const lastSquare = selectedSquares.pop();
+                         console.log(`Invalid placement. Removing the last square: ${lastSquare}`);
+ 
+                         // Find the square element and reset its color
+                         const lastSquareElement = [...radarBoard.children].find(
+                             square => square.textContent.trim() === lastSquare
+                         );
+                         if (lastSquareElement) {
+                             lastSquareElement.style.backgroundColor = ''; // Reset to default
+                         }
+                    }
                 }
             } else {
                 console.log(`Square ${clickedElement.textContent.trim()} is already selected.`);
             }
         }
     });
+
 
     radarBoard.addEventListener("click", (event) => {
         const clickedElement = event.target;
@@ -182,6 +206,91 @@ function pickASpot() {
         }
     });
 }
+
+// Function to validate ship placement
+
+let placedShips = []; // Stores all valid ships placed
+let currentShipLength = 5; // Start with the first ship length
+const shipLengths = [5, 4, 3, 2, 2]; // Define the required ship lengths
+
+function validateShipPlacement() {
+    // Convert selected squares into row/column coordinates
+    const coordinates = selectedSquares.map(square => {
+        const row = square[0].toUpperCase().charCodeAt(0) - 65; // Convert 'A'-'H' to 0-7
+        const col = parseInt(square.slice(1)) - 1; // Convert '1'-'8' to 0-7
+        return [row, col];
+    });
+
+    // Check for straight line alignment
+    const isHorizontal = coordinates.every(([row]) => row === coordinates[0][0]);
+    const isVertical = coordinates.every(([, col]) => col === coordinates[0][1]);
+
+    if (!isHorizontal && !isVertical) {
+        alert("Ship must be in a straight line (horizontal or vertical). Try again.");
+        return false;
+    }
+
+    // Check for consecutive positions
+    const positions = isHorizontal
+        ? coordinates.map(([, col]) => col).sort((a, b) => a - b)
+        : coordinates.map(([row]) => row).sort((a, b) => a - b);
+
+    for (let i = 1; i < positions.length; i++) {
+        if (positions[i] - positions[i - 1] !== 1) {
+            alert("Ship squares must be consecutive. Try again.");
+            return false;
+        }
+    }
+
+    // Validation passed
+    return true;
+}
+
+function handleSquareSelection(square) {
+    if (selectedSquares.length >= currentShipLength) {
+        alert(`You can only select ${currentShipLength} squares for this ship.`);
+        return;
+    }
+
+    if (!selectedSquares.includes(square)) {
+        selectedSquares.push(square);
+        console.log("Selected squares:", selectedSquares);
+
+        if (selectedSquares.length === currentShipLength) {
+            if (validateShipPlacement()) {
+                // Add the valid ship to placedShips
+                placedShips.push([...selectedSquares]);
+                console.log("Placed ships:", placedShips);
+
+                // Prepare for the next ship
+                if (placedShips.length < shipLengths.length) {
+                    currentShipLength = shipLengths[placedShips.length];
+                    alert(`Now place a ship of length ${currentShipLength}.`);
+                } else {
+                    alert("All ships are placed. Ready to start the game!");
+                }
+
+                // Clear the current selection
+                selectedSquares = [];
+            } else {
+                selectedSquares = []; // Reset selection if invalid
+            }
+        }
+    } else {
+        alert("Square already selected. Choose a different square.");
+    }
+}
+
+// Example usage
+const radarBoard = document.getElementById("radar_board");
+radarBoard.addEventListener("click", event => {
+    const clickedElement = event.target;
+
+    if (clickedElement && clickedElement.classList.contains("radar_square")) {
+        handleSquareSelection(clickedElement.textContent.trim());
+    }
+});
+
 
 // Function to return the current selected squares if 16 spots are selected
 function getSelectedSquares() {
