@@ -308,21 +308,22 @@ pickASpot();
 console.log(getSelectedSquares());
 
 
-// Clear board 
-function clearBoard() {
-    const radarBoard = document.getElementById("radar_board");
-    const squares = radarBoard.getElementsByClassName("square");
 
+// clear board
+function newGame() {
     // Clear the selectedSquares array
     selectedSquares = [];
+    console.log('Selected squares cleared:', selectedSquares);
 
-    // Loop through each square and reset its background color
-    for (let square of squares) {
-        square.style.backgroundColor = ''; // Set to the default color, e.g., white or transparent
-    }
+    // Reset the background color of all radar squares
+    const radarSquares = document.querySelectorAll('#radar_square');
+    radarSquares.forEach((square) => {
+        square.style.backgroundColor = ''; // Reset to default or original color
+    });
 
-    console.log('Board has been cleared.');
+    console.log('Board reset to the beginning.');
 }
 
-// Example usage: Call clearBoard when you want to reset the radar board
-// clearBoard();
+// Add an event listener to the "new_game" button
+const newGameButton = document.getElementById('new_game');
+newGameButton.addEventListener('click', newGame);
