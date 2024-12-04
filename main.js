@@ -129,6 +129,7 @@ setInterval(() => {
 let selectedSquares = [];
 function pickASpot() {
     const radarBoard = document.getElementById("radar_board");
+    const mainradarBoard = document.getElementById("main_board");
     let currentShipLength = 5; // Start with the length of the first ship
     const shipLengths = [5, 4, 3, 2, 2]; // Define ship lengths
     let placedShips = []; // Store valid ships
@@ -303,9 +304,119 @@ function getSelectedSquares() {
 
 // Example usage: Call pickASpot to start the event listeners
 pickASpot();
+updateMainBoardLimeGreen();
 
 // To get the current state of selected squares
 console.log(getSelectedSquares());
+
+
+
+// NPC Board and ship
+// Variables for the NPC board and ships
+const npcShipCount = 5; // Total number of ships
+const npcShips = [5, 4, 3, 2, 2]; // Ship sizes
+let npcPlacedShips = []; // Array to store placed ships
+let npcBoardState = {}; // Tracks the state of the board
+const npcColumns = 'ABCDEFGH'.split(''); // Columns for an 8x8 board
+
+// Function to randomly place all ships
+function placeShipsRandomly() {
+    let currentShipCount = 0;
+
+    while (currentShipCount < npcShips.length) {
+        const shipSize = npcShips[currentShipCount];
+        let placed = false;
+
+        // Try placing the ship until it's successfully placed
+        while (!placed) {
+            const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+            const startX = Math.floor(Math.random() * 8); // Random starting row (0-7)
+            const startY = Math.floor(Math.random() * 8); // Random starting column (0-7)
+
+            // Check if placement is valid
+            if (isValidPlacement(startX, startY, shipSize, direction)) {
+                placed = placeShip(startX, startY, shipSize, direction);
+                currentShipCount++;
+            }
+        }
+    }
+
+    // Log the ship locations after placing them
+    console.log("NPC Board Ship Locations:", npcPlacedShips);
+}
+
+// Check if the ship can be placed without overlapping
+function isValidPlacement(startX, startY, shipSize, direction) {
+    if (direction === 'horizontal') {
+        if (startY + shipSize > 8) return false; // Ship extends past the right edge
+        for (let i = 0; i < shipSize; i++) {
+            const coordinate = `${npcColumns[startY + i]}${startX + 1}`;
+            if (npcBoardState[coordinate] === 'occupied') {
+                return false; // Overlap with an existing ship
+            }
+        }
+    } else {
+        if (startX + shipSize > 8) return false; // Ship extends past the bottom edge
+        for (let i = 0; i < shipSize; i++) {
+            const coordinate = `${npcColumns[startY]}${startX + 1 + i}`;
+            if (npcBoardState[coordinate] === 'occupied') {
+                return false; // Overlap with an existing ship
+            }
+        }
+    }
+    return true;
+}
+
+// Function to place the ship on the board
+function placeShip(startX, startY, shipSize, direction) {
+    const shipCoordinates = [];
+
+    if (direction === 'horizontal') {
+        for (let i = 0; i < shipSize; i++) {
+            const coordinate = `${npcColumns[startY + i]}${startX + 1}`;
+            npcBoardState[coordinate] = 'occupied'; // Mark the square as occupied
+            shipCoordinates.push(coordinate);
+            highlightShip(coordinate); // Visual highlight
+        }
+    } else {
+        for (let i = 0; i < shipSize; i++) {
+            const coordinate = `${npcColumns[startY]}${startX + 1 + i}`;
+            npcBoardState[coordinate] = 'occupied'; // Mark the square as occupied
+            shipCoordinates.push(coordinate);
+            highlightShip(coordinate); // Visual highlight
+        }
+    }
+
+    npcPlacedShips.push(shipCoordinates); // Track the placed ship
+    return true;
+}
+
+// Highlight the placed ship on the board (visual purposes only)
+function highlightShip(coordinate) {
+    const square = document.getElementById(`npc_square_${coordinate}`);
+    if (square) {
+        square.style.backgroundColor = 'orange'; // Mark ship locations
+    }
+}
+
+// Call this function to place ships on the NPC board
+placeShipsRandomly();
+
+
+// MAIN Board
+
+function updateMainBoardLimeGreen() {
+    const squareId = 
+    // Loop through the selected squares and update the main board
+    selectedSquares.forEach(squareId => {
+        const mainSquareId = `main_${squareId}`; // Ensure the main board square has the correct ID
+        const mainSquare = document.getElementById(mainSquareId);
+
+        if (mainSquare) {
+            mainSquare.style.backgroundColor = 'limegreen'; // Change to lime green
+        }
+    });
+}
 
 
 
@@ -313,13 +424,21 @@ console.log(getSelectedSquares());
 function newGame() {
     // Clear the selectedSquares array
     selectedSquares = [];
+    
     console.log('Selected squares cleared:', selectedSquares);
 
     // Reset the background color of all radar squares
     const radarSquares = document.querySelectorAll('#radar_square');
+    const mainSquares = document.querySelectorAll('#main_square');
+    
     radarSquares.forEach((square) => {
         square.style.backgroundColor = ''; // Reset to default or original color
     });
+
+    mainSquares.forEach((square) => {
+        square.style.backgroundColor = ''; // Reset to default or original color
+    });
+
 
     console.log('Board reset to the beginning.');
 }
